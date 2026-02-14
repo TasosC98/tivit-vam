@@ -1,0 +1,47 @@
+{
+  "dtype": "torch.float32",
+  "metadata": {
+    "crop": [
+      345,
+      566,
+      118,
+      1840
+    ],
+    "hand_skeleton": "Handskeleton/2024-02-15_20-07-54.json",
+    "label": "TSV/2024-02-15_20-07-54.tsv",
+    "video": "Video/2024-02-15_20-07-54.mp4",
+    "video_id": "2024-02-15_20-07-54"
+  },
+  "shape": [
+    96,
+    3,
+    3,
+    180,
+    512
+  ],
+  "targets": {
+    "clef": [
+      96
+    ],
+    "hand": [
+      96
+    ],
+    "offset": [
+      96,
+      88
+    ],
+    "onset": [
+      96,
+      88
+    ],
+    "pitch": [
+      96,
+      88
+    ]
+  },
+  "video": "data/PianoVAM_v1.0/Video/2024-02-15_20-07-54.mp4",
+  "video_range": [
+    -0.9949958920478821,
+    1.0
+  ]
+}

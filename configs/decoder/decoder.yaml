@@ -1,0 +1,41 @@
+# Decoder/postprocessing defaults for onset/offset streams.
+decoder:
+  global_fusion:
+    enabled: false
+    mode: masked_mean
+    cushion_keys: 2
+    apply_to:
+      - onset
+      - offset
+      - pitch
+    weighting: uniform
+    consistency_check:
+      enabled: false
+      batches: 2
+  post:
+    snap:
+      enabled: false
+      bpm_min: 40
+      bpm_max: 240
+      bpm_step: 1
+      local_window_beats: 4
+      max_dev_ms: 35
+      blend: 0.5
+      min_support_notes: 12
+      confidence_floor: 0.15
+    dp:
+      enabled: false
+      min_on_beats: 0.25
+      min_off_beats: 0.25
+      penalty_on: 0.5
+      penalty_off: 0.5
+      keep_gates: false
+      per_key: true
+      beam: 5
+      emission_mode: logit
+      emission_gain: 4.0
+      emission_bias: 0.0
+    key_prior:
+      enabled: false
+    hand_gate:
+      enabled: false
