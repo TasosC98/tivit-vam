@@ -1,0 +1,22 @@
+dataset:
+  # PianoVAM root (must contain Video/, TSV/, metadata_v2.json, MIDI/, HDF5/)
+  root_dir: ${PIANOVAM_ROOT}
+
+  # No manifest (we use metadata_v2.json + folder structure)
+  manifest: {}
+
+  # mp4 by default; the smoke script will override this to "hdf5" when needed
+  preprocessed_format: null
+
+  # Where your per-video .h5 files live (you already created them here)
+  hdf5_root: ${PIANOVAM_HDF5_ROOT}
+
+  # Decode params (match your conversion settings)
+  frames: 96
+  resize: [180, 1536]
+  channels: 3
+
+  # Dataloader params (smoke overrides batch_size/num_workers too)
+  batch_size: 1
+  num_workers: 0
+  shuffle: true

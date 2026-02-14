@@ -1,0 +1,26 @@
+experiment:
+  name: pianovam_hdf5_baseline
+
+dataset:
+  root_dir: ${PIANOVAM_ROOT}
+  preprocessed_format: hdf5
+  hdf5_root: ${PIANOVAM_HDF5_ROOT}
+  metadata_json: ${PIANOVAM_ROOT}/metadata_v2.json
+
+  # κράτα τα ίδια που ήδη είδες στο smoke (για να μην αλλάξει τίποτα)
+  frames: 96
+  batch_size: 1
+  num_workers: 2
+  shuffle: true
+
+training:
+  epochs: 2
+  eval_freq: 1
+  save_every: 1
+  log_interval: 10
+  amp: false
+
+logging:
+  log_dir: logs/pianovam_hdf5_baseline
+  checkpoint_dir: logs/pianovam_hdf5_baseline/checkpoints
+  tensorboard: false

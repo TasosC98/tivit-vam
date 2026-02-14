@@ -1,0 +1,40 @@
+# Force CPU wheels for PyTorch
+--index-url https://download.pytorch.org/whl/cpu
+
+# =============================
+# PyTorch (CPU)
+# =============================
+torch==2.10.0+cpu
+torchvision==0.25.0+cpu
+torchaudio==2.10.0+cpu
+
+# =============================
+# Model / Training
+# =============================
+einops>=0.7.0
+timm>=0.9.0
+
+# =============================
+# Data / IO
+# =============================
+numpy>=1.24
+pyyaml>=6.0
+h5py>=3.8
+opencv-python-headless>=4.8
+decord>=0.6.0
+tqdm>=4.60
+
+# =============================
+# Common utilities (often needed by training/eval)
+# =============================
+scipy>=1.10
+pandas>=2.0
+tensorboard>=2.14
+
+# (usually already pulled by torch, but harmless explicit)
+networkx>=3.0
+sympy>=1.13
+filelock>=3.0
+fsspec>=2023.0
+jinja2>=3.1
+typing-extensions>=4.10

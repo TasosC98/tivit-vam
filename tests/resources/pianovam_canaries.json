@@ -1,0 +1,8 @@
+{
+  "canaries": [
+    "data/PianoVAM_v1.0/Video/2024-02-15_20-07-54.mp4",
+    "data/PianoVAM_v1.0/Video/2024-02-15_20-38-23.mp4"
+  ],
+  "count": 2,
+  "split": "val"
+}

@@ -1,0 +1,28 @@
+# venv / python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# local env
+.env
+.envrc
+
+# logs / runs / caches
+logs/
+runs/
+*.lock
+
+# checkpoints / artifacts
+checkpoints/
+**/checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.npz
+
+# datasets (αν τυχόν βρεθούν μέσα στο repo)
+datasets/
+data/

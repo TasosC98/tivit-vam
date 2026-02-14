@@ -1,0 +1,4 @@
+# Temperature scaling calibration settings.
+calibration:
+  method: temperature
+  output_path: calibration.json

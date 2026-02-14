@@ -1,0 +1,25 @@
+# Priors configuration applied to logits/targets.
+priors:
+  enabled: false
+  hand_gating:
+    mode: loss_reweight
+    strength: 0.75
+    apply_to: [pitch, onset, offset]
+    decode_mode: multiply
+    decode_strength: null
+    clef_thresholds: null
+    note_min: null
+  chord_smoothness:
+    strength: 0.15
+  key_signature:
+    # Used for decoding when decoder.post.key_prior.enabled is true.
+    ref_head: onset
+    apply_to: [onset, offset]
+    window_sec: 3.0
+    beta: 4.0
+    rho_uniform: 0.8
+    prior_strength: 0.5
+    epsilon: 1.0e-08
+    fps: null
+    midi_low: 21
+    midi_high: null
