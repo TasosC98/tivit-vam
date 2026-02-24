@@ -23,9 +23,9 @@ import argparse
 from pathlib import Path
 from typing import Mapping, Sequence
 
-from tivit.pipelines._common import prepare_run
-from tivit.pipelines.evaluate import evaluate
-from tivit.utils.logging import log_final_result, log_stage
+from ..pipelines._common import prepare_run
+from ..pipelines.evaluate import evaluate
+from ..utils.logging import log_final_result, log_stage
 
 
 def eval_single(

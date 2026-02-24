@@ -26,3 +26,6 @@ checkpoints/
 # datasets (αν τυχόν βρεθούν μέσα στο repo)
 datasets/
 data/
+
+__pycache__/
+*.pyc

@@ -14,7 +14,7 @@ dataset:
   shuffle: true
 
 training:
-  epochs: 2
+  epochs: 40
   eval_freq: 1
   save_every: 1
   log_interval: 10

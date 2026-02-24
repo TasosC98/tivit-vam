@@ -28,15 +28,15 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset
 from torch.utils.data._utils.collate import default_collate
 
-from tivit.data.decode.video_reader import VideoReaderConfig, load_clip
-from tivit.data.roi.keyboard_roi import (
+from ..decode.video_reader import VideoReaderConfig, load_clip
+from ..roi.keyboard_roi import (
     RegistrationRefiner,
     RegistrationResult,
     resolve_registration_cache_path,
     _apply_crop_np,
 )
-from tivit.data.roi.tiling import tile_vertical_token_aligned
-from tivit.data.targets.frame_targets import (
+from ..roi.tiling import tile_vertical_token_aligned
+from ..targets.frame_targets import (
     FrameTargetResult,
     FrameTargetSpec,
     SoftTargetConfig,
@@ -44,26 +44,29 @@ from tivit.data.targets.frame_targets import (
     resolve_soft_target_config,
     prepare_frame_targets,
 )
-from tivit.data.targets.time_grid import sec_to_frame
-from tivit.data.sync import resolve_sync, apply_sync, SyncInfo
-from tivit.data.transforms.augment import apply_global_augment
-from tivit.data.transforms.normalize import normalize
-from tivit.data.sampler import build_onset_balanced_sampler
-from tivit.data.targets.av_sync import AVLagCache
-from tivit.data.cache.frame_target_cache import FrameTargetCache, NullFrameTargetCache
-from tivit.data.targets.identifiers import canonical_video_id
+from ..targets.time_grid import sec_to_frame
+from ..sync import resolve_sync, apply_sync, SyncInfo
+from ..transforms.augment import apply_global_augment
+from ..transforms.normalize import normalize
+from ..sampler import build_onset_balanced_sampler
+from ..targets.av_sync import AVLagCache
+from ..cache.frame_target_cache import FrameTargetCache, NullFrameTargetCache
+from ..targets.identifiers import canonical_video_id
 
 LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
 class DatasetEntry:
-    """Resolved media/annotation paths and metadata for a clip."""
-
+    # mp4 path (used by registration / caches)
     video_path: Path
-    label_path: Optional[Path]
-    video_id: str
-    metadata: Mapping[str, Any]
+    # optional per-video HDF5 frames path (used by decoder when preprocessed_format=hdf5)
+    hdf5_path: Optional[Path] = None
+    # labels (TSV/MIDI etc)
+    label_path: Optional[Path] = None
+    video_id: str = ""
+    metadata: Mapping[str, Any] = None
+
 
 
 class BasePianoDataset(Dataset):
@@ -225,7 +228,7 @@ class BasePianoDataset(Dataset):
         # Support pre-decoded HDF5 per-video files when available.
         try:
             if path.suffix.lower() in {".h5", ".hdf5"}:
-                from tivit.data.decode.hdf5_reader import load_clip_from_hdf5
+                from ..decode.hdf5_reader import load_clip_from_hdf5
 
                 return load_clip_from_hdf5(path, cfg)
         except Exception:
@@ -395,7 +398,7 @@ class BasePianoDataset(Dataset):
         lag_seconds = float(clip_meta.get("lag_seconds", 0.0))
         lag_result = None
         try:
-            from tivit.data.targets.av_sync import AVLagResult  # type: ignore
+            from ..targets.av_sync import AVLagResult  # type: ignore
             lag_ms = lag_seconds * 1000.0
             lag_frames = int(round(lag_ms / max(self.frame_target_spec.fps, 1e-6)))
             lag_result = AVLagResult(
@@ -491,7 +494,7 @@ class BasePianoDataset(Dataset):
             return {}
 
         try:
-            from tivit.data.hand_labels import (
+            from ..hand_labels import (
                 EventHandLabelConfig,
                 build_event_hand_labels,
                 compute_hand_reach,
@@ -632,8 +635,26 @@ class BasePianoDataset(Dataset):
     def __getitem__(self, idx: int) -> Mapping[str, Any]:
         """Return one sample dict containing video, targets, sync, sampler meta, and metadata."""
         entry = self.entries[idx]
+        if os.getenv("DEBUG_ENTRY", "0") == "1":
+            # τύπωσε μόνο τα πρώτα λίγα για να μην γίνει spam
+            if idx < int(os.getenv("DEBUG_ENTRY_N", "5")):
+                print(
+                    f"[DEBUG_ENTRY] idx={idx} "
+                    f"video_path={getattr(entry, 'video_path', None)} "
+                    f"hdf5_path={getattr(entry, 'hdf5_path', None)} "
+                    f"label_path={getattr(entry, 'label_path', None)} "
+                    f"preprocessed_format={getattr(self, 'preprocessed_format', None)}"
+                )
         debug_extras: Optional[Dict[str, Any]] = {} if self.return_debug_extras else None
-        frames = self._decode_clip(entry.video_path)
+        decode_path = entry.video_path
+        preproc = str(self.dataset_cfg.get("preprocessed_format") or "").lower()
+        if preproc == "hdf5" and entry.hdf5_path is not None:
+            decode_path = entry.hdf5_path
+        if os.getenv("DEBUG_ENTRY", "0") == "1":
+            if idx < int(os.getenv("DEBUG_ENTRY_N", "5")):
+                print(f"[DEBUG_ENTRY] idx={idx} decode_path={decode_path}")
+
+        frames = self._decode_clip(decode_path)
         source_hw = (int(frames.shape[-2]), int(frames.shape[-1])) if frames.ndim >= 4 else None
         if debug_extras is not None:
             debug_extras["decode"] = {
@@ -664,7 +685,16 @@ class BasePianoDataset(Dataset):
                 debug_extras["tiling"] = tiling_meta
         else:
             tiles = tiles_out  # type: ignore[assignment]
-        clip_meta = {"path": str(entry.video_path), "video_uid": entry.video_id, "clip_start": self.skip_seconds}
+        clip_meta = {
+            # Keep mp4 path here for registration/cache consistency.
+            "path": str(entry.video_path),
+            # Extra paths for debugging/inspection.
+            "video_path": str(entry.video_path),
+            "hdf5_path": str(entry.hdf5_path) if entry.hdf5_path is not None else None,
+            "decode_path": str(decode_path),
+            "video_uid": entry.video_id,
+            "clip_start": self.skip_seconds,
+        }
         raw_labels = self._read_labels(entry)
         raw: MutableMapping[str, Any] = {"events": raw_labels.get("events", []) if isinstance(raw_labels, Mapping) else []}
         if isinstance(raw_labels, Mapping):
@@ -706,6 +736,9 @@ class BasePianoDataset(Dataset):
         sample: MutableMapping[str, Any] = {
             "video": tiles,
             "path": clip_meta["path"],
+            "video_path": clip_meta.get("video_path"),
+            "hdf5_path": clip_meta.get("hdf5_path"),
+            "decode_path": clip_meta.get("decode_path"),
             "video_uid": canonical_video_id(clip_meta["video_uid"]),
             "sync": {"lag_seconds": sync_info.lag_seconds, "source": sync_info.source},
             "sampler_meta": self._sampler_meta(raw.get("events", [])),

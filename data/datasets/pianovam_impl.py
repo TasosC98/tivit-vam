@@ -22,8 +22,9 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import torch
 
-from tivit.data.datasets.base import BasePianoDataset, DatasetEntry, safe_collate_fn
-from tivit.data.targets.identifiers import canonical_video_id
+from .base import BasePianoDataset, DatasetEntry, safe_collate_fn
+from ..targets.identifiers import canonical_video_id
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -169,6 +170,7 @@ class PianoVAMDataset(BasePianoDataset):
                 label_path = root / label_rel if label_rel else None
 
                 # Prefer HDF5 if configured
+                hdf5_path = None
                 if video_path is not None and preproc == "hdf5":
                     try:
                         if hdf5_root_cfg and video_rel:
@@ -176,11 +178,10 @@ class PianoVAMDataset(BasePianoDataset):
                         else:
                             candidate = video_path.with_suffix(".h5")
                         if candidate.exists():
-                            video_path = candidate
-                            if label_path is not None and not label_path.exists():
-                                label_path = None
+                            hdf5_path = candidate
                     except Exception:
                         pass
+
 
                 if video_path is None or not video_path.exists():
                     continue
@@ -193,12 +194,14 @@ class PianoVAMDataset(BasePianoDataset):
 
                 entries.append(
                     DatasetEntry(
-                        video_path=video_path,
+                        video_path=video_path,                 # mp4
+                        hdf5_path=hdf5_path,                   # h5 (optional)
                         label_path=label_path if (label_path and label_path.exists()) else None,
                         video_id=vid,
                         metadata=metadata,
                     )
                 )
+
 
             return entries
 
@@ -226,6 +229,7 @@ class PianoVAMDataset(BasePianoDataset):
                 metadata["crop"] = crop
 
             # Prefer HDF5 if configured: look in hdf5_root_cfg/<stem>.h5
+            hdf5_path = None
             if preproc == "hdf5":
                 try:
                     if hdf5_root_cfg:
@@ -233,17 +237,15 @@ class PianoVAMDataset(BasePianoDataset):
                     else:
                         candidate = video_path.with_suffix(".h5")
                     if candidate.exists():
-                        entries.append(
-                            DatasetEntry(video_path=candidate, label_path=None, video_id=vid, metadata=metadata)
-                        )
-                        continue
+                        hdf5_path = candidate
                 except Exception:
                     pass
 
             entries.append(
                 DatasetEntry(
-                    video_path=video_path,
-                    label_path=label_path if label_path.exists() else None,
+                    video_path=video_path,  # mp4
+                    hdf5_path=hdf5_path,    # h5 (optional)
+                    label_path=label_path if label_path.exists() else None,  # TSV (important!)
                     video_id=vid,
                     metadata=metadata,
                 )
@@ -259,8 +261,11 @@ class PianoVAMDataset(BasePianoDataset):
           - TSV labels in root/TSV/<stem>.tsv
           - MIDI labels if label_path points to .mid/.midi (optional)
         """
-        has_hdf5_video = entry.video_path is not None and entry.video_path.suffix.lower() in {".h5", ".hdf5"}
+        # has_hdf5_video = entry.video_path is not None and entry.video_path.suffix.lower() in {".h5", ".hdf5"}
+        # has_label_file = entry.label_path is not None and entry.label_path.exists()
+        has_hdf5_video = entry.hdf5_path is not None and entry.hdf5_path.suffix.lower() in {".h5", ".hdf5"}
         has_label_file = entry.label_path is not None and entry.label_path.exists()
+
 
         if not has_hdf5_video and not has_label_file:
             if getattr(self, "require_labels", False):
@@ -275,7 +280,7 @@ class PianoVAMDataset(BasePianoDataset):
             try:
                 import h5py
 
-                with h5py.File(entry.video_path, "r") as hf:
+                with h5py.File(entry.hdf5_path, "r") as hf:
                     if "labels_ts" in hf:
                         arr = hf["labels_ts"][:]
                         for row in arr:
@@ -374,6 +379,8 @@ class PianoVAMDataset(BasePianoDataset):
 
         payload: dict[str, Any] = {"events": events, "metadata": dict(entry.metadata)}
         payload.update(hand_meta)
+        if os.environ.get("DEBUG_LABELS") == "1":
+            print(f"[DEBUG_LABELS] {entry.video_id}: events={len(events)} label_file={entry.label_path}")
         return payload
 
 

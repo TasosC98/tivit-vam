@@ -22,16 +22,17 @@ from __future__ import annotations
 import copy
 from pathlib import Path
 from typing import Any, Mapping, Sequence
+import os
 
 import torch
 
-from tivit.calibration.io import read_calibration
-from tivit.data.loaders import make_dataloader
-from tivit.decoder.decode import pool_roll_BT
-from tivit.models import build_model
-from tivit.metrics import event_f1, f1_from_counts
-from tivit.metrics.patk_metrics import frame_counts, note_event_counts, onset_event_counts
-from tivit.postproc.patk_decode import (
+from ..calibration.io import read_calibration
+from ..data.loaders import make_dataloader
+from ..decoder.decode import pool_roll_BT
+from ..models import build_model
+from ..metrics import event_f1, f1_from_counts
+from ..metrics.patk_metrics import frame_counts, note_event_counts, onset_event_counts
+from ..postproc.patk_decode import (
     PatkDecodeConfig,
     build_notes_from_peaks,
     build_notes_from_rolls,
@@ -43,12 +44,12 @@ from tivit.postproc.patk_decode import (
     resample_roll_btP,
     smooth_time_probs,
 )
-from tivit.postproc import build_decoder
-from tivit.pipelines._common import find_checkpoint, prepare_run, resolve_eval_split, load_model_weights, setup_runtime
-from tivit.train.loop import PerTileSupport, _prepare_targets
-from tivit.losses.multitask_loss import MultitaskLoss
-from tivit.utils.amp import autocast
-from tivit.utils.logging import log_final_result, log_stage
+from ..postproc import build_decoder
+from ..pipelines._common import find_checkpoint, prepare_run, resolve_eval_split, load_model_weights, setup_runtime
+from ..train.loop import PerTileSupport, _prepare_targets
+from ..losses.multitask_loss import MultitaskLoss
+from ..utils.amp import autocast
+from ..utils.logging import log_final_result, log_stage
 
 
 def _apply_eval_overrides(
@@ -251,6 +252,17 @@ def evaluate(
             request_per_tile = per_tile_support.request_per_tile_outputs
             with autocast(device, enabled=amp_enabled):
                 outputs = model(x, return_per_tile=request_per_tile)
+                if os.environ.get("DEBUG_PRED") == "1":
+                    for k in ("onset", "offset", "pitch"):
+                        if isinstance(outputs, dict) and k in outputs and hasattr(outputs[k], "detach"):
+                            t = outputs[k].detach()
+                            # flatten για ασφάλεια
+                            mn = float(t.min().cpu())
+                            mx = float(t.max().cpu())
+                            mean = float(t.mean().cpu())
+                            print(f"[DEBUG_PRED] {k}: shape={tuple(t.shape)} min={mn:.4f} max={mx:.4f} mean={mean:.4f}")
+                    # Τύπωσε μία φορά μόνο
+                    os.environ["DEBUG_PRED"] = "0"
                 per_tile_ctx = per_tile_support.build_context(outputs, batch)
                 targets = _prepare_targets(outputs, batch, device, debug_dummy_labels=debug_dummy_labels)
                 loss, parts = loss_fn(outputs, targets, update_state=False, per_tile=per_tile_ctx)
@@ -353,6 +365,13 @@ def evaluate(
                     note_min=note_min,
                     ignore_tail=patk_cfg.ignore_tail,
                 )
+                if os.environ.get("DEBUG_DECODE") == "1":
+                    try:
+                        n = len(pred_notes)  # ή pred_events, όποιο χρησιμοποιεί
+                    except Exception:
+                        n = None
+                    print(f"[DEBUG_DECODE] predicted_items={n}")
+                    os.environ["DEBUG_DECODE"] = "0"
 
                 target_onset = targets.get("onset")
                 target_pitch = targets.get("pitch")
