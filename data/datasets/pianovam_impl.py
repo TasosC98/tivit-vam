@@ -91,8 +91,10 @@ def _load_metadata(root: Path) -> Dict[str, Dict[str, Any]]:
         rec = value.get("record_time")
         if not rec:
             continue
-        canon = canonical_video_id(str(rec))
-        table[canon] = dict(value)
+        # IMPORTANT: For PianoVAM, use record_time as the canonical key
+        # because filenames are "<record_time>.mp4" and must remain unique.
+        key = str(rec).strip()
+        table[key] = dict(value)
     return table
 
 
@@ -145,7 +147,9 @@ class PianoVAMDataset(BasePianoDataset):
     def _list_entries(self, root: Path, split: str, manifest: Optional[Mapping[str, Any]]) -> List[DatasetEntry]:
         """List video/label entries for PianoVAM split."""
         entries: List[DatasetEntry] = []
-
+        # Accept common alias used by training/calibration pipelines.
+        if split == "val":
+            split = "valid"
         preproc = (self.dataset_cfg or {}).get("preprocessed_format")
         hdf5_root_cfg = (self.dataset_cfg or {}).get("hdf5_root")
 
@@ -212,7 +216,8 @@ class PianoVAMDataset(BasePianoDataset):
             return entries
 
         for video_path in sorted(video_dir.rglob("*.mp4")):
-            vid = canonical_video_id(video_path.stem)
+            # IMPORTANT: Use stem as unique id for PianoVAM (avoids collisions).
+            vid = video_path.stem
 
             meta_entry = meta_table.get(vid, {})
             # Split filtering: metadata_v2.json has split field

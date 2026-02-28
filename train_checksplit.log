@@ -1,0 +1,2 @@
+I tivit.stage.train: building dataloaders and model
+I tivit.stage.train: starting training with configs=['configs/experiment/pianovam_hdf5_randstart.yaml']

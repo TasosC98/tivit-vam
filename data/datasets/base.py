@@ -216,14 +216,14 @@ class BasePianoDataset(Dataset):
 
     # ---- core helpers ------------------------------------------------------
 
-    def _decode_clip(self, path: Path) -> torch.Tensor:
+    def _decode_clip(self, path: Path, *, start_frame: int) -> torch.Tensor:
         """Decode video to tensor using shared reader config."""
         cfg = VideoReaderConfig(
             frames=self.frames,
             stride=self.stride,
             resize_hw=None,
             channels=self.channels,
-            start_frame=self.start_frame_offset,
+            start_frame=int(start_frame),
         )
         # Support pre-decoded HDF5 per-video files when available.
         try:
@@ -235,6 +235,44 @@ class BasePianoDataset(Dataset):
             # fall back to standard video loader
             pass
         return load_clip(path, cfg)
+
+    def _choose_start_frame(self, events: Sequence[Sequence[float]]) -> int:
+        """
+        Choose a clip start frame.
+        For training, sample around onsets to increase useful positives and
+        to ensure we cover the full temporal extent across iterations.
+        """
+        # default: respect skip_seconds
+        base = int(self.start_frame_offset)
+        if str(self.split).lower() != "train":
+            return base
+
+        # prefer event-driven sampling
+        onset_times = []
+        for evt in events or []:
+            if len(evt) >= 1:
+                try:
+                    onset_times.append(float(evt[0]))
+                except Exception:
+                    pass
+
+        rng = self._py_rng
+        import random as _random
+        if rng is None:
+            rng = _random
+
+        if onset_times:
+            t = rng.choice(onset_times)
+            onset_frame = int(round(t * self.decode_fps))
+            # start a bit before the onset with jitter
+            pre = int(round(0.8 * self.decode_fps))   # ~0.8s before
+            jitter = int(round(0.6 * self.decode_fps)) # +/- ~0.6s
+            start = onset_frame - pre + rng.randint(-jitter, jitter)
+            return max(base, int(start))
+
+        # fallback when no events exist: small random walk around skip
+        # (still better than fixed)
+        return max(base, base + rng.randint(0, int(round(5.0 * self.decode_fps))))
 
     def _to_grayscale(self, frames: torch.Tensor) -> torch.Tensor:
         """Convert frames to grayscale; replicate to 3 channels when requested."""
@@ -654,14 +692,36 @@ class BasePianoDataset(Dataset):
             if idx < int(os.getenv("DEBUG_ENTRY_N", "5")):
                 print(f"[DEBUG_ENTRY] idx={idx} decode_path={decode_path}")
 
-        frames = self._decode_clip(decode_path)
+         # Read labels early so we can choose a good start frame.
+
+        raw_labels = self._read_labels(entry)
+        raw: MutableMapping[str, Any] = {"events": raw_labels.get("events", []) if isinstance(raw_labels, Mapping) else []}
+        if isinstance(raw_labels, Mapping):
+            for key in ("metadata", "hand_skeleton_path"):
+                if key in raw_labels:
+                    raw[key] = raw_labels[key]
+            if "hand_seq" in raw_labels:
+                raw["hand_seq"] = raw_labels["hand_seq"]
+            if "clef_seq" in raw_labels:
+                raw["clef_seq"] = raw_labels["clef_seq"]
+
+        events_before_sync = list(raw.get("events", []))
+        if self.avlag_enabled:
+            sync_info = resolve_sync(entry.video_id, entry.metadata, self._av_sync_cache)
+            apply_sync(raw, sync_info)
+        else:
+            sync_info = SyncInfo(lag_seconds=0.0, source="disabled")
+
+        # Choose a per-sample start frame (train: random around onsets)
+        start_frame = self._choose_start_frame(raw.get("events", []))
+        frames = self._decode_clip(decode_path, start_frame=start_frame)
         source_hw = (int(frames.shape[-2]), int(frames.shape[-1])) if frames.ndim >= 4 else None
         if debug_extras is not None:
             debug_extras["decode"] = {
                 "frames": self.frames,
                 "stride": self.stride,
                 "decode_fps": self.decode_fps,
-                "start_frame": self.start_frame_offset,
+                "start_frame": int(start_frame),
                 "source_hw": [int(frames.shape[-2]), int(frames.shape[-1])] if frames.ndim >= 4 else None,
                 "channels": self.channels,
             }
@@ -693,26 +753,9 @@ class BasePianoDataset(Dataset):
             "hdf5_path": str(entry.hdf5_path) if entry.hdf5_path is not None else None,
             "decode_path": str(decode_path),
             "video_uid": entry.video_id,
-            "clip_start": self.skip_seconds,
+            "clip_start": float(start_frame) / max(self.decode_fps, 1e-6),
         }
-        raw_labels = self._read_labels(entry)
-        raw: MutableMapping[str, Any] = {"events": raw_labels.get("events", []) if isinstance(raw_labels, Mapping) else []}
-        if isinstance(raw_labels, Mapping):
-            for key in ("metadata", "hand_skeleton_path"):
-                if key in raw_labels:
-                    raw[key] = raw_labels[key]
-                    
-            if "hand_seq" in raw_labels:
-                raw["hand_seq"] = raw_labels["hand_seq"]
-            if "clef_seq" in raw_labels:
-                raw["clef_seq"] = raw_labels["clef_seq"]
-        events_before_sync = list(raw.get("events", []))
-        if self.avlag_enabled:
-            sync_info = resolve_sync(entry.video_id, entry.metadata, self._av_sync_cache)
-            apply_sync(raw, sync_info)
-        else:
-            sync_info = SyncInfo(lag_seconds=0.0, source="disabled")
-        clip_meta["lag_seconds"] = sync_info.lag_seconds
+        
         if debug_extras is not None:
             debug_extras["sync"] = {
                 "lag_seconds": sync_info.lag_seconds,
@@ -739,7 +782,7 @@ class BasePianoDataset(Dataset):
             "video_path": clip_meta.get("video_path"),
             "hdf5_path": clip_meta.get("hdf5_path"),
             "decode_path": clip_meta.get("decode_path"),
-            "video_uid": canonical_video_id(clip_meta["video_uid"]),
+            "video_uid": str(clip_meta["video_uid"]), # IMPORTANT: keep raw unique id to avoid collisions
             "sync": {"lag_seconds": sync_info.lag_seconds, "source": sync_info.source},
             "sampler_meta": self._sampler_meta(raw.get("events", [])),
             "metadata": raw.get("metadata", {}),
@@ -754,7 +797,7 @@ class BasePianoDataset(Dataset):
             debug_extras["canonical_hw"] = list(self.canonical_hw)
             debug_extras["index"] = idx
             debug_extras["video_path"] = str(entry.video_path)
-            debug_extras["video_uid"] = canonical_video_id(clip_meta["video_uid"])
+            debug_extras["video_uid"] = str(clip_meta["video_uid"])
             sample["_debug_extras"] = debug_extras
         return sample
 

@@ -61,8 +61,8 @@ def train_single(
 def _parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="Run TiViT-Piano training (new stack, no legacy)")
     ap.add_argument("--config", action="append", default=None, help="One or more config fragments to merge")
-    ap.add_argument("--train-split", choices=["train", "val", "test"])
-    ap.add_argument("--val-split", choices=["train", "val", "test"])
+    ap.add_argument("--train-split", choices=["train", "valid", "test"])
+    ap.add_argument("--val-split", choices=["train", "valid", "test"])
     ap.add_argument("--max-clips", type=int)
     ap.add_argument("--frames", type=int)
     ap.add_argument("--seed", type=int)

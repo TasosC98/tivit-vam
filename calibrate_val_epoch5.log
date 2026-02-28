@@ -1,0 +1,3 @@
+I tivit.stage.calibration: starting sweep on split=val deterministic=True
+I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_5.pt (epoch 5)
+I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json

@@ -1,0 +1,6 @@
+I tivit.stage.eval: starting evaluation
+I tivit.stage.eval: starting evaluation on split=valid deterministic=True
+I tivit.stage.eval: loaded checkpoint logs/pianovam_hdf5_baseline/checkpoints/epoch_14.pt (epoch 14)
+I tivit.stage.eval: evaluation finished on split=valid metrics={'patk_frame_f1': 0.0, 'patk_frame_precision': 0.0, 'patk_frame_recall': 0.0, 'patk_onset_f1': 0.0, 'patk_onset_precision': 0.0, 'patk_onset_recall': 0.0, 'patk_note_f1': 0.0, 'patk_note_precision': 0.0, 'patk_note_recall': 0.0}
+I tivit.final.eval: metrics={'patk_frame_f1': 0.0, 'patk_frame_precision': 0.0, 'patk_frame_recall': 0.0, 'patk_onset_f1': 0.0, 'patk_onset_precision': 0.0, 'patk_onset_recall': 0.0, 'patk_note_f1': 0.0, 'patk_note_precision': 0.0, 'patk_note_recall': 0.0}
+I tivit.final.eval: metrics={'patk_frame_f1': 0.0, 'patk_frame_precision': 0.0, 'patk_frame_recall': 0.0, 'patk_onset_f1': 0.0, 'patk_onset_precision': 0.0, 'patk_onset_recall': 0.0, 'patk_note_f1': 0.0, 'patk_note_precision': 0.0, 'patk_note_recall': 0.0}

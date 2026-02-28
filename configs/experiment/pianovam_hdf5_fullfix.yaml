@@ -1,5 +1,5 @@
 experiment:
-  name: pianovam_hdf5_baseline
+  name: pianovam_hdf5_fullfix
 
 dataset:
   root: /home/mkoziri/datasets/PianoVAM_v1.0
@@ -22,6 +22,6 @@ training:
   amp: false
 
 logging:
-  log_dir: logs/pianovam_hdf5_baseline
-  checkpoint_dir: logs/pianovam_hdf5_baseline/checkpoints
+  log_dir: logs/pianovam_hdf5_fullfix
+  checkpoint_dir: logs/pianovam_hdf5_fullfix/checkpoints
   tensorboard: false

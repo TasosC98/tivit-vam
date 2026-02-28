@@ -1,0 +1,51 @@
+experiment:
+  name: pianovam_hdf5_randstart
+
+dataset:
+  root: /home/mkoziri/datasets/PianoVAM_v1.0
+  root_dir: /home/mkoziri/datasets/PianoVAM_v1.0
+  preprocessed_format: hdf5
+  hdf5_root: /home/mkoziri/datasets/PianoVAM_v1.0/HDF5
+  metadata_json: /home/mkoziri/datasets/PianoVAM_v1.0/metadata_v2.json
+
+  frames: 96
+  batch_size: 1
+  num_workers: 2
+  shuffle: true
+
+training:
+  epochs: 40
+  eval_freq: 1
+  save_every: 1
+  log_interval: 10
+  amp: false
+  metrics:
+    prob_threshold_onset: 0.006
+    prob_threshold_offset: 0.007
+    decoder:
+      onset:
+        open: 0.006
+        hold: 0.0036
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+      offset:
+        open: 0.007
+        hold: 0.0042
+        min_on: 2
+        min_off: 1
+        merge_gap: 0
+        median: 1
+logging:
+  log_dir: logs/pianovam_hdf5_randstart
+  checkpoint_dir: logs/pianovam_hdf5_randstart/checkpoints
+  tensorboard: false
+
+calibration:
+  method: threshold_sweep
+  split: val
+  sweep:
+    min_prob: 0.001
+    max_prob: 0.02
+    steps: 25

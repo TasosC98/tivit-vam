@@ -1,0 +1,2 @@
+I tivit.stage.calibration: starting sweep on split=val deterministic=True
+I tivit.stage.calibration: no checkpoint found; calibrating randomly initialized weights
