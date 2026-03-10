@@ -395,6 +395,9 @@ def make_dataloader(cfg: Mapping[str, Any], split: str, drop_last: bool = False,
     shuffle = bool(dcfg.get("shuffle", True)) if split == "train" else False
     num_workers = int(dcfg.get("num_workers", 0))
     prefetch_factor = dcfg.get("prefetch_factor")
+    # torch DataLoader: prefetch_factor is only valid with multiprocessing
+    if num_workers <= 0:
+        prefetch_factor = None
 
     ds = PianoVAMDataset(cfg, split, full_cfg=cfg)
     return torch.utils.data.DataLoader(  # type: ignore[attr-defined]

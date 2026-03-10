@@ -226,13 +226,28 @@ def evaluate(
     total_batches = 0
     parts_sum: dict[str, float] = {}
     debug_logged = False
+    density_logged = False
     event_counts = None
+    event_counts_anypitch = None
+    event_density = None
+    postproc_debug = bool(
+        (cfg_eval.get("logging", {}) if isinstance(cfg_eval, Mapping) else {}).get("postproc_debug", False)
+    )
     if eval_mode in {"native", "both"}:
         event_counts = {
             "onset": {"tp": 0, "fp": 0, "fn": 0, "clips": 0},
             "offset": {"tp": 0, "fp": 0, "fn": 0, "clips": 0},
         }
-
+        # Pitch-agnostic (collapse pitch dimension): tells us if the bottleneck is pitch mapping.
+        event_counts_anypitch = {
+            "onset": {"tp": 0, "fp": 0, "fn": 0, "clips": 0},
+            "offset": {"tp": 0, "fp": 0, "fn": 0, "clips": 0},
+        }
+        # Event density sanity (how many events per clip are predicted vs ground truth).
+        event_density = {
+            "onset": {"pred": 0, "gt": 0, "clips": 0},
+            "offset": {"pred": 0, "gt": 0, "clips": 0},
+        }
     patk_counts = None
     if eval_mode in {"patk", "both"}:
         patk_counts = {
@@ -331,6 +346,39 @@ def evaluate(
                         counts["fp"] += int(result.false_positives)
                         counts["fn"] += int(result.false_negatives)
                         counts["clips"] += int(result.clips_evaluated)
+                        # ----- Test 3: event density sanity -----
+                        if event_density is not None:
+                            den = event_density.get(head)
+                            if den is not None:
+                                den["pred"] += int(pred_tensor.detach().sum().item())
+                                den["gt"] += int(target_mask.detach().sum().item())
+                                den["clips"] += int(pred_tensor.shape[0])
+                                if postproc_debug and not density_logged:
+                                    pred0 = int(pred_tensor[0].detach().sum().item())
+                                    gt0 = int(target_mask[0].detach().sum().item())
+                                    ratio0 = (pred0 / gt0) if gt0 > 0 else float("inf")
+                                    log_stage(
+                                        "eval",
+                                        f"EVENT_DENSITY batch0 head={head} pred_events={pred0} gt_events={gt0} ratio={ratio0:.2f}",
+                                    )
+                                    density_logged = True
+
+                        # ----- Test 2: pitch-agnostic event F1 -----
+                        if event_counts_anypitch is not None:
+                            counts_any = event_counts_anypitch.get(head)
+                            if counts_any is not None:
+                                pred_any = pred_tensor.any(dim=2, keepdim=True)
+                                target_any = target_mask.any(dim=2, keepdim=True)
+                                result_any = event_f1(
+                                    pred_any,
+                                    target_any,
+                                    hop_seconds=hop_seconds,
+                                    tolerance=event_tolerance,
+                                )
+                                counts_any["tp"] += int(result_any.true_positives)
+                                counts_any["fp"] += int(result_any.false_positives)
+                                counts_any["fn"] += int(result_any.false_negatives)
+                                counts_any["clips"] += int(result_any.clips_evaluated)
 
             if eval_mode in {"patk", "both"} and patk_counts is not None:
                 onset_logits = outputs.get("onset_logits")
@@ -429,6 +477,29 @@ def evaluate(
             metrics["onset_event_f1"] = onset_summary.f1
             metrics["offset_event_f1"] = offset_summary.f1
             metrics["ev_f1_mean"] = 0.5 * (onset_summary.f1 + offset_summary.f1)
+    # ----- Test 2 outputs: pitch-agnostic event F1 -----
+    if event_counts_anypitch is not None:
+        onset_counts = event_counts_anypitch["onset"]
+        offset_counts = event_counts_anypitch["offset"]
+        onset_summary = f1_from_counts(onset_counts["tp"], onset_counts["fp"], onset_counts["fn"])
+        offset_summary = f1_from_counts(offset_counts["tp"], offset_counts["fp"], offset_counts["fn"])
+        if onset_counts["clips"] > 0 or offset_counts["clips"] > 0:
+            metrics["onset_event_f1_anypitch"] = onset_summary.f1
+            metrics["offset_event_f1_anypitch"] = offset_summary.f1
+            metrics["ev_f1_mean_anypitch"] = 0.5 * (onset_summary.f1 + offset_summary.f1)
+
+    # ----- Test 3 outputs: event density sanity -----
+    if event_density is not None:
+        for head in ("onset", "offset"):
+            den = event_density.get(head, {})
+            clips = int(den.get("clips", 0) or 0)
+            if clips <= 0:
+                continue
+            pred_per_clip = float(den.get("pred", 0) or 0) / clips
+            gt_per_clip = float(den.get("gt", 0) or 0) / clips
+            metrics[f"{head}_pred_events_per_clip"] = pred_per_clip
+            metrics[f"{head}_gt_events_per_clip"] = gt_per_clip
+            metrics[f"{head}_event_density_ratio"] = pred_per_clip / max(gt_per_clip, 1e-8)
 
     if patk_counts is not None:
         frame_summary = f1_from_counts(

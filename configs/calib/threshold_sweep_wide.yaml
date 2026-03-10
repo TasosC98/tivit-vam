@@ -1,0 +1,7 @@
+calibration:
+  method: threshold_sweep
+  sweep:
+    min_prob: 0.001
+    max_prob: 0.90
+    delta: 0.05
+    steps: 41

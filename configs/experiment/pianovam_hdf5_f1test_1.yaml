@@ -15,6 +15,14 @@ dataset:
   batch_size: 1
   num_workers: 2
   shuffle: true
+  registration:
+    enable: true
+    cache_path: reg_refined_pianovam.json
+  tiles: 3
+  sampler:
+    onset_frac: 0.3
+    nearmiss_frac: 0.2
+    bg_frac: 0.5
 
 training:
   epochs: 40
@@ -27,19 +35,26 @@ training:
     prob_threshold_offset: 0.007
     decoder:
       onset:
-        open: 0.006
-        hold: 0.0036
-        min_on: 1
-        min_off: 1
-        merge_gap: 0
-        median: 1
-      offset:
-        open: 0.007
-        hold: 0.0042
+        open: 0.36
+        hold: 0.28
         min_on: 2
-        min_off: 1
-        merge_gap: 0
-        median: 1
+        min_off: 2
+        merge_gap: 1
+        median: 3
+      offset:
+        open: 0.32
+        hold: 0.24
+        min_on: 2
+        min_off: 2
+        merge_gap: 1
+        median: 3
+  loss:
+    heads:
+      onset:
+        pos_weight: 2.0
+      offset:
+        pos_weight: 2.0
+
 logging:
   log_dir: logs/pianovam_hdf5_randstart
   checkpoint_dir: logs/pianovam_hdf5_randstart/checkpoints
@@ -52,3 +67,4 @@ calibration:
     min_prob: 0.001
     max_prob: 0.02
     steps: 25
+

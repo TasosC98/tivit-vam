@@ -1,0 +1,18 @@
+experiment:
+  name: test1_overfit_1clip
+logging:
+  log_dir: logs/test1_overfit_1clip
+  checkpoint_dir: logs/test1_overfit_1clip/checkpoints
+  postproc_debug: true
+dataset:
+  max_clips: 1
+  batch_size: 1
+  num_workers: 0
+  shuffle: false
+training:
+  epochs: 200
+  learning_rate: 1.0e-4
+  weight_decay: 0.0
+  eval_freq: 1
+  save_every: 20
+  log_interval: 1
