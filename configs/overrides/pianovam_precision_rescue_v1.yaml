@@ -1,0 +1,47 @@
+experiment:
+  name: pianovam_hdf5_precision_rescue_v1
+
+logging:
+  log_dir: logs/pianovam_hdf5_precision_rescue_v1
+  checkpoint_dir: logs/pianovam_hdf5_randstart/checkpoints
+  calibration_log: calibrate_precision_rescue.log
+  eval_log: eval_precision_rescue.log
+  postproc_debug: false
+
+training:
+  metrics:
+    eval_mode: both
+
+    # Force the sweep center into a sane regime instead of 0.006 / 0.007
+    prob_threshold_onset: 0.36
+    prob_threshold_offset: 0.32
+
+    # Replace the permissive decoder template with the canonical conservative one
+    decoder:
+      onset:
+        open: 0.36
+        low_ratio: 0.75
+        min_on: 2
+        min_off: 2
+        merge_gap: 1
+        median: 3
+      offset:
+        open: 0.32
+        low_ratio: 0.75
+        min_on: 2
+        min_off: 2
+        merge_gap: 1
+        median: 3
+
+calibration:
+  # one calibration file per checkpoint inside the new experiment folder
+  output_path: calibration/epoch_018.json
+
+  # disable external priors so the center really comes from the values above
+  threshold_priors_path: null
+
+  sweep:
+    delta: 0.06
+    steps: 9
+    min_prob: 0.08
+    max_prob: 0.62
