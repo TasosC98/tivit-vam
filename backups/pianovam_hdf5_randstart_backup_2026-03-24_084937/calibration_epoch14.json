@@ -1,0 +1,127 @@
+{
+  "decoder": {
+    "offset": {
+      "hold": 0.012,
+      "median": 3,
+      "merge_gap": 1,
+      "min_off": 2,
+      "min_on": 2,
+      "open": 0.02
+    },
+    "onset": {
+      "hold": 0.012,
+      "median": 3,
+      "merge_gap": 1,
+      "min_off": 2,
+      "min_on": 2,
+      "open": 0.02
+    }
+  },
+  "method": "threshold_sweep",
+  "metrics": {
+    "ev_f1_mean": 0.05254827724415713,
+    "offset_event_f1": 0.056037357556627705,
+    "onset_event_f1": 0.049059196931686554
+  },
+  "split": "valid",
+  "sweep": {
+    "delta": 0.05,
+    "max_prob": 0.02,
+    "min_prob": 0.001,
+    "per_head": {
+      "offset": {
+        "center": 0.007,
+        "results": [
+          {
+            "clips": 9,
+            "f1": 0.034706205038479813,
+            "fn": 4,
+            "fp": 35152,
+            "hold": 0.0006,
+            "precision": 0.01766152470377329,
+            "recall": 0.993710691808275,
+            "threshold": 0.001,
+            "tp": 632
+          },
+          {
+            "clips": 9,
+            "f1": 0.04437799935468517,
+            "fn": 72,
+            "fp": 24218,
+            "hold": 0.0042,
+            "precision": 0.022758453716397887,
+            "recall": 0.8867924528162454,
+            "threshold": 0.007,
+            "tp": 564
+          },
+          {
+            "clips": 9,
+            "f1": 0.056037357556627705,
+            "fn": 132,
+            "fp": 16848,
+            "hold": 0.012,
+            "precision": 0.029045643153510232,
+            "recall": 0.7924528301762193,
+            "threshold": 0.02,
+            "tp": 504
+          }
+        ],
+        "source": "training.metrics",
+        "values": [
+          0.001,
+          0.007,
+          0.02
+        ]
+      },
+      "onset": {
+        "center": 0.006,
+        "results": [
+          {
+            "clips": 9,
+            "f1": 0.03950029046344554,
+            "fn": 0,
+            "fp": 34675,
+            "hold": 0.0006,
+            "precision": 0.020148072793031498,
+            "recall": 0.9999999999859748,
+            "threshold": 0.001,
+            "tp": 713
+          },
+          {
+            "clips": 9,
+            "f1": 0.046364176278806866,
+            "fn": 11,
+            "fp": 28867,
+            "hold": 0.0036,
+            "precision": 0.0237410801853212,
+            "recall": 0.9845722300002163,
+            "threshold": 0.006,
+            "tp": 702
+          },
+          {
+            "clips": 9,
+            "f1": 0.049059196931686554,
+            "fn": 142,
+            "fp": 21994,
+            "hold": 0.012,
+            "precision": 0.025304675382217902,
+            "recall": 0.8008415147152758,
+            "threshold": 0.02,
+            "tp": 571
+          }
+        ],
+        "source": "training.metrics",
+        "values": [
+          0.001,
+          0.006,
+          0.02
+        ]
+      }
+    },
+    "steps": 25
+  },
+  "thresholds": {
+    "offset": 0.02,
+    "onset": 0.02
+  }
+}

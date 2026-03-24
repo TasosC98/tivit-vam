@@ -1,0 +1,38 @@
+experiment:
+  name: pianovam_hdf5_resume_eval_precision
+
+logging:
+  log_dir: logs/pianovam_hdf5_resume_eval_precision
+  checkpoint_dir: logs/pianovam_hdf5_resume_e20_acc4/checkpoints
+  postproc_debug: true
+
+training:
+  metrics:
+    eval_mode: both
+    prob_threshold_onset: 0.36
+    prob_threshold_offset: 0.32
+    decoder:
+      onset:
+        open: 0.36
+        low_ratio: 0.75
+        min_on: 2
+        min_off: 2
+        merge_gap: 1
+        median: 3
+      offset:
+        open: 0.32
+        low_ratio: 0.75
+        min_on: 2
+        min_off: 2
+        merge_gap: 1
+        median: 3
+
+calibration:
+  method: threshold_sweep
+  output_path: calibration/TMP.json
+  threshold_priors_path: null
+  sweep:
+    delta: 0.06
+    steps: 9
+    min_prob: 0.08
+    max_prob: 0.62

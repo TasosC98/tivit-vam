@@ -1,0 +1,15 @@
+experiment:
+  name: pianovam_hdf5_randstart_resume_to60
+
+logging:
+  log_dir: logs/pianovam_hdf5_randstart
+  checkpoint_dir: logs/pianovam_hdf5_randstart/checkpoints
+
+training:
+  resume: true
+  epochs: 60
+  save_every: 1
+  eval_freq: 1
+
+train:
+  accumulate_steps: 4

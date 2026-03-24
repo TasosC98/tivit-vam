@@ -1,0 +1,21 @@
+experiment:
+  name: pianovam_hdf5_resume_e20_acc4
+
+logging:
+  log_dir: logs/pianovam_hdf5_resume_e20_acc4
+  checkpoint_dir: logs/pianovam_hdf5_resume_e20_acc4/checkpoints
+
+training:
+  resume: true
+  epochs: 60
+  eval_freq: 1
+  save_every: 1
+  soft_targets:
+    enabled: true
+    apply_to:
+      onset: true
+      pitch: true
+      offset: true
+
+train:
+  accumulate_steps: 4

@@ -1,0 +1,2 @@
+/home/mkoziri/dev/tivit-vam/pipelines/train_single.py --config logs/pianovam_hdf5_randstart/resolved_config.yaml --config configs/overrides/pianovam_resume_to60.yaml --verbose info
+configs: logs/pianovam_hdf5_randstart/resolved_config.yaml, configs/overrides/pianovam_resume_to60.yaml

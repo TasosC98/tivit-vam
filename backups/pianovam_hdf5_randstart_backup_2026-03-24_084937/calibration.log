@@ -1,0 +1,387 @@
+2026-02-28 19:19:54 I tivit.stage.calibration: starting sweep on split=val deterministic=True
+2026-02-28 19:19:54 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-02-28 19:19:54 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_2.pt (epoch 2)
+2026-02-28 19:19:54 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-02-28 19:44:49 I tivit.stage.calibration: starting sweep on split=val deterministic=True
+2026-02-28 19:44:49 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-02-28 19:44:49 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_2.pt (epoch 2)
+2026-02-28 19:44:49 D h5py._conv: Creating converter from 7 to 5
+2026-02-28 19:44:49 D h5py._conv: Creating converter from 5 to 7
+2026-02-28 19:44:49 D h5py._conv: Creating converter from 7 to 5
+2026-02-28 19:44:49 D h5py._conv: Creating converter from 5 to 7
+2026-02-28 19:44:49 D h5py._conv: Creating converter from 7 to 5
+2026-02-28 19:44:49 D h5py._conv: Creating converter from 5 to 7
+2026-02-28 19:44:49 D h5py._conv: Creating converter from 7 to 5
+2026-02-28 19:44:49 D h5py._conv: Creating converter from 5 to 7
+2026-02-28 19:45:12 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-01 01:24:21 I tivit.stage.calibration: starting sweep on split=val deterministic=True
+2026-03-01 01:24:21 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-01 01:24:21 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_2.pt (epoch 2)
+2026-03-01 01:24:21 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:24:21 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:24:21 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:24:21 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:24:21 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:24:21 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:24:21 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:24:21 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:24:44 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-01 01:25:59 I tivit.stage.calibration: starting sweep on split=val deterministic=True
+2026-03-01 01:25:59 I tivit.stage.calibration: no checkpoint found; calibrating randomly initialized weights
+2026-03-01 01:25:59 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:25:59 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:25:59 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:25:59 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:25:59 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:25:59 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:25:59 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:25:59 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:28:27 I tivit.stage.calibration: starting sweep on split=val deterministic=True
+2026-03-01 01:28:27 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-01 01:28:27 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_5.pt (epoch 5)
+2026-03-01 01:28:27 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:28:27 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:28:27 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:28:27 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:28:27 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:28:27 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:28:27 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:28:27 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:28:43 I tivit.stage.calibration: starting sweep on split=val deterministic=True
+2026-03-01 01:28:43 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-01 01:28:43 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_5.pt (epoch 5)
+2026-03-01 01:28:43 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:28:43 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:28:43 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:28:43 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:28:43 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:28:43 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:28:43 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 01:28:43 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 01:29:07 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-01 14:23:34 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-01 14:23:34 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-01 14:23:34 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_15.pt (epoch 15)
+2026-03-01 14:23:34 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:23:34 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:23:34 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:23:34 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:23:34 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:23:34 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:23:34 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:23:34 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:23:58 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-01 14:29:02 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-01 14:29:02 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-01 14:29:02 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_5.pt (epoch 5)
+2026-03-01 14:29:02 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:29:02 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:29:02 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:29:02 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:29:02 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:29:02 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:29:02 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:29:02 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:29:41 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-01 14:29:44 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-01 14:29:44 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-01 14:29:44 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_10.pt (epoch 10)
+2026-03-01 14:29:44 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:29:44 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:29:44 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:29:44 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:29:44 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:29:44 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:29:44 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:29:44 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:30:09 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-01 14:30:11 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-01 14:30:11 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-01 14:30:11 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_15.pt (epoch 15)
+2026-03-01 14:30:11 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:30:11 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:30:11 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:30:11 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:30:11 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:30:11 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:30:11 D h5py._conv: Creating converter from 7 to 5
+2026-03-01 14:30:11 D h5py._conv: Creating converter from 5 to 7
+2026-03-01 14:30:39 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-10 09:47:04 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-10 09:47:04 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-10 09:47:04 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_15.pt (epoch 15)
+2026-03-10 09:47:04 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 09:47:04 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 09:47:04 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 09:47:04 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 09:47:04 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 09:47:04 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 09:47:04 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 09:47:04 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 09:47:27 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-10 12:54:40 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-10 12:54:40 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-10 12:54:40 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-10 12:54:40 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-10 12:54:40 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-10 12:54:40 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-10 12:54:40 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_15.pt (epoch 15)
+2026-03-10 12:54:40 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 12:54:40 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 12:54:40 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 12:54:40 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 12:54:40 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 12:54:40 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 12:54:40 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 12:54:40 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 12:54:56 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-10 12:55:05 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-10 12:55:15 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-10 12:55:18 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-10 22:00:13 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-10 22:00:13 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-10 22:00:13 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-10 22:00:13 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-10 22:00:13 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-10 22:00:13 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-10 22:00:13 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_14.pt (epoch 14)
+2026-03-10 22:00:13 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 22:00:13 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 22:00:13 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 22:00:13 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 22:00:13 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 22:00:13 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 22:00:13 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 22:00:13 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 22:00:29 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-10 22:00:37 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-10 22:00:48 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-10 22:00:51 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-10 22:27:41 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-10 22:27:41 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-10 22:27:41 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-10 22:27:41 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-10 22:27:41 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-10 22:27:41 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-10 22:27:41 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_14.pt (epoch 14)
+2026-03-10 22:27:41 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 22:27:41 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 22:27:41 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 22:27:41 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 22:27:41 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 22:27:41 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 22:27:41 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 22:27:41 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 22:27:58 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-10 22:28:10 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-10 22:28:20 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-10 22:28:24 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-10 22:55:09 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-10 22:55:09 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-10 22:55:09 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-10 22:55:09 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-10 22:55:09 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-10 22:55:09 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-10 22:55:09 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_10.pt (epoch 10)
+2026-03-10 22:55:09 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 22:55:09 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 22:55:09 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 22:55:09 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 22:55:09 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 22:55:09 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 22:55:09 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 22:55:09 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 22:55:30 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-10 22:55:39 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-10 22:55:49 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-10 22:55:53 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-10 23:07:06 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-10 23:07:06 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-10 23:07:06 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-10 23:07:06 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-10 23:07:06 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-10 23:07:06 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-10 23:07:06 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_11.pt (epoch 11)
+2026-03-10 23:07:07 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:07:07 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:07:07 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:07:07 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:07:07 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:07:07 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:07:07 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:07:07 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:07:22 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-10 23:07:31 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-10 23:07:42 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-10 23:07:47 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-10 23:19:37 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-10 23:19:37 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-10 23:19:37 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-10 23:19:37 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-10 23:19:37 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-10 23:19:37 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-10 23:19:37 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_12.pt (epoch 12)
+2026-03-10 23:19:37 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:19:37 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:19:37 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:19:37 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:19:37 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:19:37 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:19:37 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:19:37 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:19:57 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-10 23:20:06 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-10 23:20:16 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-10 23:20:19 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-10 23:31:34 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-10 23:31:34 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-10 23:31:34 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-10 23:31:34 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-10 23:31:34 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-10 23:31:34 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-10 23:31:34 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_13.pt (epoch 13)
+2026-03-10 23:31:34 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:31:34 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:31:34 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:31:34 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:31:34 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:31:34 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:31:34 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:31:34 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:31:50 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-10 23:31:59 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-10 23:32:09 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-10 23:32:13 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-10 23:43:51 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-10 23:43:51 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-10 23:43:51 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-10 23:43:51 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-10 23:43:51 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-10 23:43:51 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-10 23:43:51 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_14.pt (epoch 14)
+2026-03-10 23:43:51 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:43:51 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:43:51 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:43:51 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:43:51 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:43:51 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:43:51 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:43:51 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:44:13 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-10 23:44:22 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-10 23:44:32 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-10 23:44:36 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-10 23:56:02 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-10 23:56:02 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-10 23:56:02 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-10 23:56:02 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-10 23:56:02 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-10 23:56:02 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-10 23:56:02 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_15.pt (epoch 15)
+2026-03-10 23:56:02 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:56:02 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:56:02 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:56:02 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:56:02 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:56:02 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:56:02 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 23:56:02 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 23:56:24 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-10 23:56:35 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-10 23:56:45 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-10 23:56:49 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-11 00:08:28 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-11 00:08:28 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-11 00:08:28 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-11 00:08:28 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-11 00:08:28 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-11 00:08:28 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-11 00:08:28 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_16.pt (epoch 16)
+2026-03-11 00:08:28 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:08:28 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:08:28 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:08:28 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:08:28 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:08:28 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:08:28 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:08:28 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:08:45 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-11 00:08:53 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-11 00:09:03 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-11 00:09:07 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-11 00:20:20 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-11 00:20:20 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-11 00:20:20 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-11 00:20:20 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-11 00:20:20 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-11 00:20:20 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-11 00:20:20 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_17.pt (epoch 17)
+2026-03-11 00:20:20 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:20:20 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:20:20 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:20:20 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:20:20 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:20:20 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:20:20 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:20:20 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:20:35 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-11 00:20:44 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-11 00:20:56 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-11 00:21:00 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-11 00:32:54 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-11 00:32:54 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-11 00:32:54 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-11 00:32:54 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-11 00:32:54 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-11 00:32:54 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-11 00:32:54 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_18.pt (epoch 18)
+2026-03-11 00:32:54 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:32:54 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:32:54 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:32:54 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:32:54 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:32:54 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:32:54 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:32:54 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:33:14 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-11 00:33:22 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-11 00:33:33 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-11 00:33:36 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-11 00:44:48 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-11 00:44:48 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-11 00:44:48 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-11 00:44:48 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-11 00:44:48 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-11 00:44:48 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-11 00:44:48 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_19.pt (epoch 19)
+2026-03-11 00:44:48 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:44:48 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:44:48 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:44:48 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:44:48 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:44:48 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:44:48 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:44:48 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:45:04 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-11 00:45:13 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-11 00:45:23 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-11 00:45:26 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json
+2026-03-11 00:57:02 I tivit.stage.calibration: starting sweep on split=valid deterministic=True
+2026-03-11 00:57:02 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-11 00:57:02 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-11 00:57:02 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-11 00:57:02 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-11 00:57:02 I tivit.pipelines._common: Initialized lazy encoder before checkpoint load.
+2026-03-11 00:57:02 I tivit.stage.calibration: loaded checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_20.pt (epoch 20)
+2026-03-11 00:57:02 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:57:02 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:57:02 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:57:02 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:57:02 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:57:02 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:57:02 D h5py._conv: Creating converter from 7 to 5
+2026-03-11 00:57:02 D h5py._conv: Creating converter from 5 to 7
+2026-03-11 00:57:23 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-11 00:57:32 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-11 00:57:42 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-11 00:57:46 I tivit.final.calibration: calibration saved to logs/pianovam_hdf5_randstart/calibration.json

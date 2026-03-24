@@ -1,0 +1,320 @@
+2026-02-28 11:32:05 I tivit.stage.train: building dataloaders and model
+2026-02-28 11:32:05 I tivit.stage.train: starting training with configs=['configs/experiment/pianovam_hdf5_randstart.yaml']
+2026-02-28 11:32:06 D h5py._conv: Creating converter from 7 to 5
+2026-02-28 11:32:06 D h5py._conv: Creating converter from 5 to 7
+2026-02-28 11:32:06 D h5py._conv: Creating converter from 7 to 5
+2026-02-28 11:32:06 D h5py._conv: Creating converter from 5 to 7
+2026-02-28 11:32:06 I tivit.data.sampler: Onset-balanced sampler enabled | size=50 onset=50 nearmiss=27 bg=0 fractions={'onset': 0.5, 'nearmiss': 0.25, 'background': 0.25} radius=6
+2026-02-28 11:32:06 I tivit.train.loop: Seeded onset head bias to prior=0.0066 (logit=-5.0101)
+2026-02-28 11:32:06 I tivit.train.loop: Seeded offset head bias to prior=0.0061 (logit=-5.0967)
+2026-02-28 11:33:14 I tivit.losses.multitask_loss: [onoff_loss] head=pitch mode=adaptive_band context=frame band=[2.00, 4.00] pos_weight min=2.000 mean=3.636 max=4.000
+2026-02-28 11:46:24 I tivit.train.loop: [train] epoch=1 step=10 avg_loss=4.2036
+2026-02-28 12:00:42 I tivit.train.loop: [train] epoch=1 step=20 avg_loss=4.5548
+2026-02-28 12:14:59 I tivit.train.loop: [train] epoch=1 step=30 avg_loss=4.6936
+2026-02-28 12:29:15 I tivit.train.loop: [train] epoch=1 step=40 avg_loss=4.7617
+2026-02-28 12:43:32 I tivit.train.loop: [train] epoch=1 step=50 avg_loss=4.7271
+2026-02-28 12:43:33 I tivit.train.loop: [train] epoch=1 metrics={'loss': 4.727087926864624, 'pitch': 0.6851275002956391, 'onset': 2.4536745882034303, 'offset': 1.5882858341932298, 'hand': 0.0, 'clef': 0.0, 'total': 4.727087926864624}
+2026-02-28 12:43:33 I tivit.train.loop: [eval] epoch=1 metrics={}
+2026-02-28 12:43:33 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_1.pt
+2026-02-28 12:58:30 I tivit.train.loop: [train] epoch=2 step=10 avg_loss=5.1921
+2026-02-28 13:12:47 I tivit.train.loop: [train] epoch=2 step=20 avg_loss=4.9117
+2026-02-28 13:27:05 I tivit.train.loop: [train] epoch=2 step=30 avg_loss=4.8879
+2026-02-28 13:41:23 I tivit.train.loop: [train] epoch=2 step=40 avg_loss=4.7012
+2026-02-28 13:55:40 I tivit.train.loop: [train] epoch=2 step=50 avg_loss=4.6932
+2026-02-28 13:55:40 I tivit.train.loop: [train] epoch=2 metrics={'loss': 4.69320419549942, 'pitch': 0.6263076853752136, 'onset': 2.4646390426158904, 'offset': 1.602257457971573, 'hand': 0.0, 'clef': 0.0, 'total': 4.69320419549942}
+2026-02-28 13:55:40 I tivit.train.loop: [eval] epoch=2 metrics={}
+2026-02-28 13:55:40 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_2.pt
+2026-02-28 14:09:58 I tivit.train.loop: [train] epoch=3 step=10 avg_loss=4.9054
+2026-02-28 14:24:15 I tivit.train.loop: [train] epoch=3 step=20 avg_loss=4.8212
+2026-02-28 14:38:31 I tivit.train.loop: [train] epoch=3 step=30 avg_loss=4.9565
+2026-02-28 14:52:48 I tivit.train.loop: [train] epoch=3 step=40 avg_loss=5.3318
+2026-02-28 19:17:26 I tivit.stage.train: building dataloaders and model
+2026-02-28 19:17:26 I tivit.stage.train: starting training with configs=['configs/experiment/pianovam_hdf5_randstart.yaml']
+2026-02-28 19:17:27 D h5py._conv: Creating converter from 7 to 5
+2026-02-28 19:17:27 D h5py._conv: Creating converter from 5 to 7
+2026-02-28 19:17:27 D h5py._conv: Creating converter from 7 to 5
+2026-02-28 19:17:27 D h5py._conv: Creating converter from 5 to 7
+2026-02-28 19:17:27 I tivit.data.sampler: Onset-balanced sampler enabled | size=50 onset=50 nearmiss=27 bg=0 fractions={'onset': 0.5, 'nearmiss': 0.25, 'background': 0.25} radius=6
+2026-02-28 19:17:27 I tivit.train.loop: Seeded onset head bias to prior=0.0066 (logit=-5.0101)
+2026-02-28 19:17:27 I tivit.train.loop: Seeded offset head bias to prior=0.0061 (logit=-5.0967)
+2026-02-28 19:18:38 I tivit.losses.multitask_loss: [onoff_loss] head=pitch mode=adaptive_band context=frame band=[2.00, 4.00] pos_weight min=2.000 mean=3.636 max=4.000
+2026-02-28 19:32:43 I tivit.train.loop: [train] epoch=1 step=10 avg_loss=4.2036
+2026-02-28 19:47:37 I tivit.train.loop: [train] epoch=1 step=20 avg_loss=4.5548
+2026-02-28 20:02:52 I tivit.train.loop: [train] epoch=1 step=30 avg_loss=4.6936
+2026-02-28 20:17:42 I tivit.train.loop: [train] epoch=1 step=40 avg_loss=4.7617
+2026-02-28 20:32:04 I tivit.train.loop: [train] epoch=1 step=50 avg_loss=4.7271
+2026-02-28 20:32:04 I tivit.train.loop: [train] epoch=1 metrics={'loss': 4.727087926864624, 'pitch': 0.6851275002956391, 'onset': 2.4536745882034303, 'offset': 1.5882858341932298, 'hand': 0.0, 'clef': 0.0, 'total': 4.727087926864624}
+2026-02-28 20:32:04 I tivit.train.loop: [eval] epoch=1 metrics={}
+2026-02-28 20:32:04 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_1.pt
+2026-02-28 20:46:28 I tivit.train.loop: [train] epoch=2 step=10 avg_loss=5.1921
+2026-02-28 21:00:49 I tivit.train.loop: [train] epoch=2 step=20 avg_loss=4.9117
+2026-02-28 21:15:11 I tivit.train.loop: [train] epoch=2 step=30 avg_loss=4.8879
+2026-02-28 21:29:33 I tivit.train.loop: [train] epoch=2 step=40 avg_loss=4.7012
+2026-02-28 21:43:55 I tivit.train.loop: [train] epoch=2 step=50 avg_loss=4.6932
+2026-02-28 21:43:55 I tivit.train.loop: [train] epoch=2 metrics={'loss': 4.69320419549942, 'pitch': 0.6263076853752136, 'onset': 2.4646390426158904, 'offset': 1.602257457971573, 'hand': 0.0, 'clef': 0.0, 'total': 4.69320419549942}
+2026-02-28 21:43:55 I tivit.train.loop: [eval] epoch=2 metrics={}
+2026-02-28 21:43:55 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_2.pt
+2026-02-28 21:58:18 I tivit.train.loop: [train] epoch=3 step=10 avg_loss=4.9054
+2026-02-28 22:12:40 I tivit.train.loop: [train] epoch=3 step=20 avg_loss=4.8212
+2026-02-28 22:27:03 I tivit.train.loop: [train] epoch=3 step=30 avg_loss=4.9565
+2026-02-28 22:41:25 I tivit.train.loop: [train] epoch=3 step=40 avg_loss=5.3318
+2026-02-28 22:55:48 I tivit.train.loop: [train] epoch=3 step=50 avg_loss=5.2109
+2026-02-28 22:55:48 I tivit.train.loop: [train] epoch=3 metrics={'loss': 5.210922451019287, 'pitch': 0.5856068217754364, 'onset': 2.773427402377129, 'offset': 1.851888193190098, 'hand': 0.0, 'clef': 0.0, 'total': 5.210922451019287}
+2026-02-28 22:55:48 I tivit.train.loop: [eval] epoch=3 metrics={}
+2026-02-28 22:55:48 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_3.pt
+2026-02-28 23:10:12 I tivit.train.loop: [train] epoch=4 step=10 avg_loss=5.4621
+2026-02-28 23:24:35 I tivit.train.loop: [train] epoch=4 step=20 avg_loss=4.9930
+2026-02-28 23:38:57 I tivit.train.loop: [train] epoch=4 step=30 avg_loss=4.5430
+2026-02-28 23:53:19 I tivit.train.loop: [train] epoch=4 step=40 avg_loss=4.6847
+2026-03-01 00:07:43 I tivit.train.loop: [train] epoch=4 step=50 avg_loss=4.5018
+2026-03-01 00:07:43 I tivit.train.loop: [train] epoch=4 metrics={'loss': 4.501801331043243, 'pitch': 0.5282881897687912, 'onset': 2.3933439016342164, 'offset': 1.5801692610979081, 'hand': 0.0, 'clef': 0.0, 'total': 4.501801331043243}
+2026-03-01 00:07:44 I tivit.train.loop: [eval] epoch=4 metrics={}
+2026-03-01 00:07:44 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_4.pt
+2026-03-01 00:22:09 I tivit.train.loop: [train] epoch=5 step=10 avg_loss=5.2031
+2026-03-01 00:36:33 I tivit.train.loop: [train] epoch=5 step=20 avg_loss=4.5223
+2026-03-01 00:50:57 I tivit.train.loop: [train] epoch=5 step=30 avg_loss=4.3568
+2026-03-01 01:05:20 I tivit.train.loop: [train] epoch=5 step=40 avg_loss=4.4516
+2026-03-01 01:19:44 I tivit.train.loop: [train] epoch=5 step=50 avg_loss=4.5275
+2026-03-01 01:19:44 I tivit.train.loop: [train] epoch=5 metrics={'loss': 4.52750449180603, 'pitch': 0.4973372393846512, 'onset': 2.395785005092621, 'offset': 1.6343822038173677, 'hand': 0.0, 'clef': 0.0, 'total': 4.52750449180603}
+2026-03-01 01:19:44 I tivit.train.loop: [eval] epoch=5 metrics={}
+2026-03-01 01:19:44 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_5.pt
+2026-03-01 01:34:30 I tivit.train.loop: [train] epoch=6 step=10 avg_loss=4.1795
+2026-03-01 01:49:27 I tivit.train.loop: [train] epoch=6 step=20 avg_loss=4.0771
+2026-03-01 02:03:51 I tivit.train.loop: [train] epoch=6 step=30 avg_loss=3.8972
+2026-03-01 02:18:16 I tivit.train.loop: [train] epoch=6 step=40 avg_loss=3.8184
+2026-03-01 02:32:40 I tivit.train.loop: [train] epoch=6 step=50 avg_loss=3.8962
+2026-03-01 02:32:40 I tivit.train.loop: [train] epoch=6 metrics={'loss': 3.8961700057983397, 'pitch': 0.4563444548845291, 'onset': 2.0819237753748894, 'offset': 1.3579017770290376, 'hand': 0.0, 'clef': 0.0, 'total': 3.8961700057983397}
+2026-03-01 02:32:40 I tivit.train.loop: [eval] epoch=6 metrics={}
+2026-03-01 02:32:40 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_6.pt
+2026-03-01 02:47:05 I tivit.train.loop: [train] epoch=7 step=10 avg_loss=4.1698
+2026-03-01 03:01:29 I tivit.train.loop: [train] epoch=7 step=20 avg_loss=4.7921
+2026-03-01 03:15:53 I tivit.train.loop: [train] epoch=7 step=30 avg_loss=4.6092
+2026-03-01 03:30:17 I tivit.train.loop: [train] epoch=7 step=40 avg_loss=4.3064
+2026-03-01 03:44:41 I tivit.train.loop: [train] epoch=7 step=50 avg_loss=4.1291
+2026-03-01 03:44:41 I tivit.train.loop: [train] epoch=7 metrics={'loss': 4.129148771762848, 'pitch': 0.4335004484653473, 'onset': 2.2164526629447936, 'offset': 1.4791956698894502, 'hand': 0.0, 'clef': 0.0, 'total': 4.129148771762848}
+2026-03-01 03:44:41 I tivit.train.loop: [eval] epoch=7 metrics={}
+2026-03-01 03:44:41 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_7.pt
+2026-03-01 03:59:06 I tivit.train.loop: [train] epoch=8 step=10 avg_loss=3.4212
+2026-03-01 04:13:31 I tivit.train.loop: [train] epoch=8 step=20 avg_loss=3.5014
+2026-03-01 04:27:55 I tivit.train.loop: [train] epoch=8 step=30 avg_loss=3.6227
+2026-03-01 04:42:20 I tivit.train.loop: [train] epoch=8 step=40 avg_loss=3.5414
+2026-03-01 04:56:44 I tivit.train.loop: [train] epoch=8 step=50 avg_loss=3.6850
+2026-03-01 04:56:44 I tivit.train.loop: [train] epoch=8 metrics={'loss': 3.685032613277435, 'pitch': 0.3959342300891876, 'onset': 1.976379055082798, 'offset': 1.3127193251252174, 'hand': 0.0, 'clef': 0.0, 'total': 3.685032613277435}
+2026-03-01 04:56:44 I tivit.train.loop: [eval] epoch=8 metrics={}
+2026-03-01 04:56:44 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_8.pt
+2026-03-01 05:11:09 I tivit.train.loop: [train] epoch=9 step=10 avg_loss=3.6846
+2026-03-01 05:25:34 I tivit.train.loop: [train] epoch=9 step=20 avg_loss=3.6661
+2026-03-01 05:39:58 I tivit.train.loop: [train] epoch=9 step=30 avg_loss=3.7960
+2026-03-01 05:54:23 I tivit.train.loop: [train] epoch=9 step=40 avg_loss=3.6922
+2026-03-01 06:08:47 I tivit.train.loop: [train] epoch=9 step=50 avg_loss=3.5362
+2026-03-01 06:08:47 I tivit.train.loop: [train] epoch=9 metrics={'loss': 3.53622581243515, 'pitch': 0.3881206512451172, 'onset': 1.885538238286972, 'offset': 1.2625669425725936, 'hand': 0.0, 'clef': 0.0, 'total': 3.53622581243515}
+2026-03-01 06:08:47 I tivit.train.loop: [eval] epoch=9 metrics={}
+2026-03-01 06:08:47 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_9.pt
+2026-03-01 06:23:13 I tivit.train.loop: [train] epoch=10 step=10 avg_loss=3.7499
+2026-03-01 06:37:37 I tivit.train.loop: [train] epoch=10 step=20 avg_loss=3.7784
+2026-03-01 06:52:02 I tivit.train.loop: [train] epoch=10 step=30 avg_loss=3.4271
+2026-03-01 07:06:26 I tivit.train.loop: [train] epoch=10 step=40 avg_loss=3.2611
+2026-03-01 07:20:50 I tivit.train.loop: [train] epoch=10 step=50 avg_loss=3.2866
+2026-03-01 07:20:50 I tivit.train.loop: [train] epoch=10 metrics={'loss': 3.286578950881958, 'pitch': 0.35500128149986265, 'onset': 1.726520562171936, 'offset': 1.2050570905208589, 'hand': 0.0, 'clef': 0.0, 'total': 3.286578950881958}
+2026-03-01 07:20:50 I tivit.train.loop: [eval] epoch=10 metrics={}
+2026-03-01 07:20:50 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_10.pt
+2026-03-01 07:35:18 I tivit.train.loop: [train] epoch=11 step=10 avg_loss=2.9449
+2026-03-01 07:49:44 I tivit.train.loop: [train] epoch=11 step=20 avg_loss=2.9493
+2026-03-01 08:04:08 I tivit.train.loop: [train] epoch=11 step=30 avg_loss=3.1237
+2026-03-01 08:18:32 I tivit.train.loop: [train] epoch=11 step=40 avg_loss=3.1457
+2026-03-01 08:32:57 I tivit.train.loop: [train] epoch=11 step=50 avg_loss=3.0406
+2026-03-01 08:32:57 I tivit.train.loop: [train] epoch=11 metrics={'loss': 3.0405741143226623, 'pitch': 0.38040523588657377, 'onset': 1.5662926423549652, 'offset': 1.093876233100891, 'hand': 0.0, 'clef': 0.0, 'total': 3.0405741143226623}
+2026-03-01 08:32:57 I tivit.train.loop: [eval] epoch=11 metrics={}
+2026-03-01 08:32:57 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_11.pt
+2026-03-01 08:47:25 I tivit.train.loop: [train] epoch=12 step=10 avg_loss=3.0796
+2026-03-01 09:01:50 I tivit.train.loop: [train] epoch=12 step=20 avg_loss=2.9699
+2026-03-01 09:16:15 I tivit.train.loop: [train] epoch=12 step=30 avg_loss=2.8319
+2026-03-01 09:30:40 I tivit.train.loop: [train] epoch=12 step=40 avg_loss=2.8568
+2026-03-01 09:45:38 I tivit.train.loop: [train] epoch=12 step=50 avg_loss=2.8907
+2026-03-01 09:45:38 I tivit.train.loop: [train] epoch=12 metrics={'loss': 2.890721786022186, 'pitch': 0.359974884390831, 'onset': 1.4597507894039154, 'offset': 1.0709961342811585, 'hand': 0.0, 'clef': 0.0, 'total': 2.890721786022186}
+2026-03-01 09:45:38 I tivit.train.loop: [eval] epoch=12 metrics={}
+2026-03-01 09:45:38 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_12.pt
+2026-03-01 10:00:10 I tivit.train.loop: [train] epoch=13 step=10 avg_loss=2.1823
+2026-03-01 10:14:35 I tivit.train.loop: [train] epoch=13 step=20 avg_loss=2.6560
+2026-03-01 10:29:01 I tivit.train.loop: [train] epoch=13 step=30 avg_loss=2.6831
+2026-03-01 10:43:28 I tivit.train.loop: [train] epoch=13 step=40 avg_loss=2.7531
+2026-03-01 10:57:53 I tivit.train.loop: [train] epoch=13 step=50 avg_loss=2.7257
+2026-03-01 10:57:53 I tivit.train.loop: [train] epoch=13 metrics={'loss': 2.7257056367397308, 'pitch': 0.3756845054030418, 'onset': 1.3633848416805268, 'offset': 0.9866363114118576, 'hand': 0.0, 'clef': 0.0, 'total': 2.7257056367397308}
+2026-03-01 10:57:53 I tivit.train.loop: [eval] epoch=13 metrics={}
+2026-03-01 10:57:53 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_13.pt
+2026-03-01 11:12:21 I tivit.train.loop: [train] epoch=14 step=10 avg_loss=2.7480
+2026-03-01 11:26:46 I tivit.train.loop: [train] epoch=14 step=20 avg_loss=2.8966
+2026-03-01 11:41:11 I tivit.train.loop: [train] epoch=14 step=30 avg_loss=2.5896
+2026-03-01 11:55:37 I tivit.train.loop: [train] epoch=14 step=40 avg_loss=2.7636
+2026-03-01 12:10:03 I tivit.train.loop: [train] epoch=14 step=50 avg_loss=2.6410
+2026-03-01 12:10:03 I tivit.train.loop: [train] epoch=14 metrics={'loss': 2.641015691757202, 'pitch': 0.3542492166161537, 'onset': 1.2850752687454223, 'offset': 1.0016912180185318, 'hand': 0.0, 'clef': 0.0, 'total': 2.641015691757202}
+2026-03-01 12:10:03 I tivit.train.loop: [eval] epoch=14 metrics={}
+2026-03-01 12:10:03 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_14.pt
+2026-03-01 12:24:30 I tivit.train.loop: [train] epoch=15 step=10 avg_loss=2.3786
+2026-03-01 12:38:57 I tivit.train.loop: [train] epoch=15 step=20 avg_loss=2.3330
+2026-03-01 12:53:22 I tivit.train.loop: [train] epoch=15 step=30 avg_loss=2.2626
+2026-03-01 13:07:49 I tivit.train.loop: [train] epoch=15 step=40 avg_loss=2.3403
+2026-03-01 13:22:13 I tivit.train.loop: [train] epoch=15 step=50 avg_loss=2.2309
+2026-03-01 13:22:13 I tivit.train.loop: [train] epoch=15 metrics={'loss': 2.23086626291275, 'pitch': 0.3473403489589691, 'onset': 1.070184087753296, 'offset': 0.8133418124914169, 'hand': 0.0, 'clef': 0.0, 'total': 2.23086626291275}
+2026-03-01 13:22:13 I tivit.train.loop: [eval] epoch=15 metrics={}
+2026-03-01 13:22:13 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_15.pt
+2026-03-01 13:36:41 I tivit.train.loop: [train] epoch=16 step=10 avg_loss=2.9385
+2026-03-01 13:51:06 I tivit.train.loop: [train] epoch=16 step=20 avg_loss=2.4267
+2026-03-01 14:05:32 I tivit.train.loop: [train] epoch=16 step=30 avg_loss=2.5505
+2026-03-01 14:19:58 I tivit.train.loop: [train] epoch=16 step=40 avg_loss=2.5827
+2026-03-01 14:35:50 I tivit.train.loop: [train] epoch=16 step=50 avg_loss=2.4964
+2026-03-01 14:35:50 I tivit.train.loop: [train] epoch=16 metrics={'loss': 2.49642346739769, 'pitch': 0.36152136355638503, 'onset': 1.185648134946823, 'offset': 0.9492540055513382, 'hand': 0.0, 'clef': 0.0, 'total': 2.49642346739769}
+2026-03-01 14:35:50 I tivit.train.loop: [eval] epoch=16 metrics={}
+2026-03-01 14:35:50 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_16.pt
+2026-03-01 14:51:13 I tivit.train.loop: [train] epoch=17 step=10 avg_loss=2.3095
+2026-03-01 15:06:34 I tivit.train.loop: [train] epoch=17 step=20 avg_loss=2.3595
+2026-03-01 15:21:52 I tivit.train.loop: [train] epoch=17 step=30 avg_loss=2.3540
+2026-03-01 15:36:41 I tivit.train.loop: [train] epoch=17 step=40 avg_loss=2.4222
+2026-03-01 15:51:11 I tivit.train.loop: [train] epoch=17 step=50 avg_loss=2.4346
+2026-03-01 15:51:11 I tivit.train.loop: [train] epoch=17 metrics={'loss': 2.4346464109420776, 'pitch': 0.3523999461531639, 'onset': 1.1465372967720031, 'offset': 0.9357091538608074, 'hand': 0.0, 'clef': 0.0, 'total': 2.4346464109420776}
+2026-03-01 15:51:11 I tivit.train.loop: [eval] epoch=17 metrics={}
+2026-03-01 15:51:11 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_17.pt
+2026-03-01 16:05:43 I tivit.train.loop: [train] epoch=18 step=10 avg_loss=1.9539
+2026-03-01 16:20:12 I tivit.train.loop: [train] epoch=18 step=20 avg_loss=1.9454
+2026-03-01 16:34:40 I tivit.train.loop: [train] epoch=18 step=30 avg_loss=1.9437
+2026-03-01 16:49:09 I tivit.train.loop: [train] epoch=18 step=40 avg_loss=2.0743
+2026-03-01 17:03:38 I tivit.train.loop: [train] epoch=18 step=50 avg_loss=2.0561
+2026-03-01 17:03:38 I tivit.train.loop: [train] epoch=18 metrics={'loss': 2.056126549243927, 'pitch': 0.34504870176315305, 'onset': 0.9535293710231781, 'offset': 0.757548496723175, 'hand': 0.0, 'clef': 0.0, 'total': 2.056126549243927}
+2026-03-01 17:03:38 I tivit.train.loop: [eval] epoch=18 metrics={}
+2026-03-01 17:03:38 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_18.pt
+2026-03-01 17:18:10 I tivit.train.loop: [train] epoch=19 step=10 avg_loss=2.0073
+2026-03-01 17:32:38 I tivit.train.loop: [train] epoch=19 step=20 avg_loss=1.9363
+2026-03-01 17:47:07 I tivit.train.loop: [train] epoch=19 step=30 avg_loss=2.2038
+2026-03-01 18:01:35 I tivit.train.loop: [train] epoch=19 step=40 avg_loss=2.2201
+2026-03-01 18:16:02 I tivit.train.loop: [train] epoch=19 step=50 avg_loss=2.1442
+2026-03-01 18:16:02 I tivit.train.loop: [train] epoch=19 metrics={'loss': 2.1442296290397644, 'pitch': 0.33518960535526277, 'onset': 1.0155465561151504, 'offset': 0.7934934660792351, 'hand': 0.0, 'clef': 0.0, 'total': 2.1442296290397644}
+2026-03-01 18:16:02 I tivit.train.loop: [eval] epoch=19 metrics={}
+2026-03-01 18:16:02 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_19.pt
+2026-03-01 18:30:33 I tivit.train.loop: [train] epoch=20 step=10 avg_loss=1.8631
+2026-03-01 18:45:01 I tivit.train.loop: [train] epoch=20 step=20 avg_loss=1.7859
+2026-03-01 18:59:30 I tivit.train.loop: [train] epoch=20 step=30 avg_loss=1.8759
+2026-03-01 19:13:58 I tivit.train.loop: [train] epoch=20 step=40 avg_loss=1.9121
+2026-03-01 19:28:27 I tivit.train.loop: [train] epoch=20 step=50 avg_loss=2.0669
+2026-03-01 19:28:27 I tivit.train.loop: [train] epoch=20 metrics={'loss': 2.066862123012543, 'pitch': 0.3283510410785675, 'onset': 0.9814450657367706, 'offset': 0.7570660191774369, 'hand': 0.0, 'clef': 0.0, 'total': 2.066862123012543}
+2026-03-01 19:28:27 I tivit.train.loop: [eval] epoch=20 metrics={}
+2026-03-01 19:28:27 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_20.pt
+2026-03-10 10:47:09 I tivit.stage.train: building dataloaders and model
+2026-03-10 10:47:09 I tivit.stage.train: starting training with configs=['configs/experiment/pianovam_hdf5_randstart.yaml', 'configs/overrides/test1_overfit_1clip.yaml']
+2026-03-10 10:47:10 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 10:47:10 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 10:47:10 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 10:47:10 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 10:47:10 I tivit.data.sampler: Onset-balanced sampler enabled | size=50 onset=50 nearmiss=27 bg=0 fractions={'onset': 0.5, 'nearmiss': 0.25, 'background': 0.25} radius=6
+2026-03-10 10:47:10 I tivit.train.loop: Seeded onset head bias to prior=0.0066 (logit=-5.0101)
+2026-03-10 10:47:10 I tivit.train.loop: Seeded offset head bias to prior=0.0061 (logit=-5.0967)
+2026-03-10 10:48:53 I tivit.stage.train: building dataloaders and model
+2026-03-10 10:48:53 I tivit.stage.train: starting training with configs=['configs/experiment/pianovam_hdf5_f1test_1.yaml', 'configs/overrides/test1_overfit_1clip.yaml']
+2026-03-10 10:48:54 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-10 10:48:54 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-10 10:48:54 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-10 10:48:54 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-10 10:48:54 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 10:48:54 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 10:48:54 D h5py._conv: Creating converter from 7 to 5
+2026-03-10 10:48:54 D h5py._conv: Creating converter from 5 to 7
+2026-03-10 10:48:54 I tivit.data.sampler: Onset-balanced sampler enabled | size=50 onset=50 nearmiss=27 bg=0 fractions={'onset': 0.3, 'nearmiss': 0.2, 'background': 0.5} radius=6
+2026-03-10 10:48:54 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-10 10:48:54 I tivit.train.loop: Seeded onset head bias to prior=0.0066 (logit=-5.0101)
+2026-03-10 10:48:54 I tivit.train.loop: Seeded offset head bias to prior=0.0061 (logit=-5.0967)
+2026-03-10 10:48:58 I tivit.final.train: training run failed
+2026-03-23 20:22:19 I tivit.stage.train: building dataloaders and model
+2026-03-23 20:22:19 I tivit.stage.train: starting training with configs=['logs/pianovam_hdf5_randstart/resolved_config.yaml', 'configs/overrides/pianovam_resume_to60.yaml']
+2026-03-23 20:22:19 I tivit.data.roi.keyboard_roi: reg_refined: canonical_hw=(180, 1536) cache=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json
+2026-03-23 20:22:19 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-23 20:22:19 I tivit.data.roi.keyboard_roi: reg_refined: cache_path=/home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json entries=31 canonical_hw=(180, 1536)
+2026-03-23 20:22:19 I tivit.data.roi.keyboard_roi: reg_refined: cache_keys_preview=['video_01', 'video_03', 'video_04', 'video_06', 'video_07']
+2026-03-23 20:22:20 D h5py._conv: Creating converter from 7 to 5
+2026-03-23 20:22:20 D h5py._conv: Creating converter from 5 to 7
+2026-03-23 20:22:20 D h5py._conv: Creating converter from 7 to 5
+2026-03-23 20:22:20 D h5py._conv: Creating converter from 5 to 7
+2026-03-23 20:22:20 I tivit.data.sampler: Onset-balanced sampler enabled | size=50 onset=50 nearmiss=27 bg=0 fractions={'onset': 0.3, 'nearmiss': 0.2, 'background': 0.5} radius=6
+2026-03-23 20:22:20 I tivit.data.roi.keyboard_roi: reg_refined: loaded 31 cache entries from /home/mkoziri/dev/tivit-vam/reg_refined_pianovam.json (upgraded=0 skipped_target_hw=0 skipped_invalid=0)
+2026-03-23 20:22:20 W tivit.train.loop: Failed to resume from logs/pianovam_hdf5_randstart/checkpoints/epoch_9.pt: Error(s) in loading state_dict for TiViTPiano:
+	Unexpected key(s) in state_dict: "encoder.global_ctx", "encoder.temporal_blocks.0.attn.self_attn.in_proj_weight", "encoder.temporal_blocks.0.attn.self_attn.in_proj_bias", "encoder.temporal_blocks.0.attn.self_attn.out_proj.weight", "encoder.temporal_blocks.0.attn.self_attn.out_proj.bias", "encoder.temporal_blocks.0.attn.linear1.weight", "encoder.temporal_blocks.0.attn.linear1.bias", "encoder.temporal_blocks.0.attn.linear2.weight", "encoder.temporal_blocks.0.attn.linear2.bias", "encoder.temporal_blocks.0.attn.norm1.weight", "encoder.temporal_blocks.0.attn.norm1.bias", "encoder.temporal_blocks.0.attn.norm2.weight", "encoder.temporal_blocks.0.attn.norm2.bias", "encoder.spatial_blocks.0.attn.self_attn.in_proj_weight", "encoder.spatial_blocks.0.attn.self_attn.in_proj_bias", "encoder.spatial_blocks.0.attn.self_attn.out_proj.weight", "encoder.spatial_blocks.0.attn.self_attn.out_proj.bias", "encoder.spatial_blocks.0.attn.linear1.weight", "encoder.spatial_blocks.0.attn.linear1.bias", "encoder.spatial_blocks.0.attn.linear2.weight", "encoder.spatial_blocks.0.attn.linear2.bias", "encoder.spatial_blocks.0.attn.norm1.weight", "encoder.spatial_blocks.0.attn.norm1.bias", "encoder.spatial_blocks.0.attn.norm2.weight", "encoder.spatial_blocks.0.attn.norm2.bias", "encoder.global_blocks.0.attn.self_attn.in_proj_weight", "encoder.global_blocks.0.attn.self_attn.in_proj_bias", "encoder.global_blocks.0.attn.self_attn.out_proj.weight", "encoder.global_blocks.0.attn.self_attn.out_proj.bias", "encoder.global_blocks.0.attn.linear1.weight", "encoder.global_blocks.0.attn.linear1.bias", "encoder.global_blocks.0.attn.linear2.weight", "encoder.global_blocks.0.attn.linear2.bias", "encoder.global_blocks.0.attn.norm1.weight", "encoder.global_blocks.0.attn.norm1.bias", "encoder.global_blocks.0.attn.norm2.weight", "encoder.global_blocks.0.attn.norm2.bias". 
+2026-03-23 20:22:20 I tivit.train.loop: Seeded onset head bias to prior=0.0066 (logit=-5.0101)
+2026-03-23 20:22:20 I tivit.train.loop: Seeded offset head bias to prior=0.0061 (logit=-5.0967)
+2026-03-23 20:23:31 I tivit.losses.multitask_loss: [onoff_loss] head=pitch mode=adaptive_band context=frame band=[2.00, 4.00] pos_weight min=2.000 mean=3.773 max=4.000
+2026-03-23 20:37:17 I tivit.train.loop: [train] epoch=1 step=10 avg_loss=0.8132
+2026-03-23 20:38:56 W tivit.data.roi.keyboard_roi: reg_refined: video_33 status=fallback_worsened err_before=4.68px err_after=4.68px err_white=4.68px err_black=4.68px frames=96
+2026-03-23 20:51:45 I tivit.train.loop: [train] epoch=1 step=20 avg_loss=0.7823
+2026-03-23 20:51:56 W tivit.data.roi.keyboard_roi: reg_refined: video_41 status=fallback_worsened err_before=5.26px err_after=5.26px err_white=5.26px err_black=5.26px frames=96
+2026-03-23 20:59:10 W tivit.data.roi.keyboard_roi: reg_refined: video_41 status=fallback_worsened err_before=5.26px err_after=5.26px err_white=5.26px err_black=5.26px frames=96
+2026-03-23 21:06:13 I tivit.train.loop: [train] epoch=1 step=30 avg_loss=0.7924
+2026-03-23 21:20:38 I tivit.train.loop: [train] epoch=1 step=40 avg_loss=0.7950
+2026-03-23 21:35:04 I tivit.train.loop: [train] epoch=1 step=50 avg_loss=0.8045
+2026-03-23 21:35:04 I tivit.train.loop: [train] epoch=1 metrics={'loss': 0.8044711548089981, 'pitch': 0.3924038648605347, 'onset': 0.21889641620218753, 'offset': 0.19317087553441525, 'hand': 0.0, 'clef': 0.0, 'total': 0.8044711548089981}
+2026-03-23 21:37:41 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-23 21:40:05 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-23 21:42:33 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-23 21:45:58 I tivit.train.loop: [eval] epoch=1 metrics={'loss': 0.6659257643752627, 'pitch': 0.35428491400347817, 'onset': 0.1646496132016182, 'offset': 0.14699123717016643, 'hand': 0.0, 'clef': 0.0, 'total': 0.6659257643752627}
+2026-03-23 21:45:59 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_1.pt
+2026-03-23 22:00:25 I tivit.train.loop: [train] epoch=2 step=10 avg_loss=0.7723
+2026-03-23 22:14:51 I tivit.train.loop: [train] epoch=2 step=20 avg_loss=0.7514
+2026-03-23 22:19:22 W tivit.data.roi.keyboard_roi: reg_refined: video_33 status=fallback_worsened err_before=4.68px err_after=4.68px err_white=4.68px err_black=4.68px frames=96
+2026-03-23 22:20:49 W tivit.data.roi.keyboard_roi: reg_refined: video_38 status=fallback_worsened err_before=5.35px err_after=5.35px err_white=5.35px err_black=5.35px frames=96
+2026-03-23 22:29:18 I tivit.train.loop: [train] epoch=2 step=30 avg_loss=0.7477
+2026-03-23 22:42:27 W tivit.data.roi.keyboard_roi: reg_refined: video_38 status=fallback_worsened err_before=5.40px err_after=5.40px err_white=5.40px err_black=5.40px frames=96
+2026-03-23 22:43:45 I tivit.train.loop: [train] epoch=2 step=40 avg_loss=0.7714
+2026-03-23 22:48:16 W tivit.data.roi.keyboard_roi: reg_refined: video_41 status=fallback_worsened err_before=5.26px err_after=5.26px err_white=5.26px err_black=5.26px frames=96
+2026-03-23 22:58:11 I tivit.train.loop: [train] epoch=2 step=50 avg_loss=0.7608
+2026-03-23 22:58:11 I tivit.train.loop: [train] epoch=2 metrics={'loss': 0.7607811105251312, 'pitch': 0.3936395174264908, 'onset': 0.19496697396039964, 'offset': 0.17217462457716465, 'hand': 0.0, 'clef': 0.0, 'total': 0.7607811105251312}
+2026-03-23 23:00:48 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-23 23:03:12 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-23 23:05:40 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-23 23:09:05 I tivit.train.loop: [eval] epoch=2 metrics={'loss': 0.6527154511875577, 'pitch': 0.34317199389139813, 'onset': 0.16340884442130724, 'offset': 0.14613461618622145, 'hand': 0.0, 'clef': 0.0, 'total': 0.6527154511875577}
+2026-03-23 23:09:05 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_2.pt
+2026-03-23 23:22:17 W tivit.data.roi.keyboard_roi: reg_refined: video_41 status=fallback_worsened err_before=5.26px err_after=5.26px err_white=5.26px err_black=5.26px frames=96
+2026-03-23 23:23:32 I tivit.train.loop: [train] epoch=3 step=10 avg_loss=0.8106
+2026-03-23 23:25:10 W tivit.data.roi.keyboard_roi: reg_refined: video_38 status=fallback_worsened err_before=5.35px err_after=5.35px err_white=5.35px err_black=5.35px frames=96
+2026-03-23 23:37:58 I tivit.train.loop: [train] epoch=3 step=20 avg_loss=0.7958
+2026-03-23 23:52:23 I tivit.train.loop: [train] epoch=3 step=30 avg_loss=0.8280
+2026-03-23 23:52:32 W tivit.data.roi.keyboard_roi: reg_refined: video_18 status=fallback_worsened err_before=4.68px err_after=4.68px err_white=4.68px err_black=4.68px frames=96
+2026-03-24 00:06:50 I tivit.train.loop: [train] epoch=3 step=40 avg_loss=0.8677
+2026-03-24 00:08:28 W tivit.data.roi.keyboard_roi: reg_refined: video_33 status=fallback_worsened err_before=4.68px err_after=4.68px err_white=4.68px err_black=4.68px frames=96
+2026-03-24 00:09:56 W tivit.data.roi.keyboard_roi: reg_refined: video_33 status=fallback_worsened err_before=4.68px err_after=4.68px err_white=4.68px err_black=4.68px frames=96
+2026-03-24 00:15:44 W tivit.data.roi.keyboard_roi: reg_refined: video_41 status=fallback_worsened err_before=5.26px err_after=5.26px err_white=5.26px err_black=5.26px frames=96
+2026-03-24 00:21:20 I tivit.train.loop: [train] epoch=3 step=50 avg_loss=0.8455
+2026-03-24 00:21:20 I tivit.train.loop: [train] epoch=3 metrics={'loss': 0.8455362015962601, 'pitch': 0.3940549036860466, 'onset': 0.2379084298014641, 'offset': 0.21357286632061004, 'hand': 0.0, 'clef': 0.0, 'total': 0.8455362015962601}
+2026-03-24 00:23:57 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-24 00:26:21 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-24 00:28:49 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-24 00:32:15 I tivit.train.loop: [eval] epoch=3 metrics={'loss': 0.6450448797808753, 'pitch': 0.33811888926559025, 'onset': 0.16221435947550666, 'offset': 0.14471162772840923, 'hand': 0.0, 'clef': 0.0, 'total': 0.6450448797808753}
+2026-03-24 00:32:15 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_3.pt
+2026-03-24 00:36:46 W tivit.data.roi.keyboard_roi: reg_refined: video_38 status=fallback_worsened err_before=5.40px err_after=5.40px err_white=5.40px err_black=5.40px frames=96
+2026-03-24 00:38:17 W tivit.data.roi.keyboard_roi: reg_refined: video_16 status=fallback_worsened err_before=5.24px err_after=5.24px err_white=5.24px err_black=5.24px frames=96
+2026-03-24 00:42:37 W tivit.data.roi.keyboard_roi: reg_refined: video_41 status=fallback_worsened err_before=5.26px err_after=5.26px err_white=5.26px err_black=5.26px frames=96
+2026-03-24 00:44:04 W tivit.data.roi.keyboard_roi: reg_refined: video_38 status=fallback_worsened err_before=5.40px err_after=5.40px err_white=5.40px err_black=5.40px frames=96
+2026-03-24 00:46:48 I tivit.train.loop: [train] epoch=4 step=10 avg_loss=0.7707
+2026-03-24 00:49:52 W tivit.data.roi.keyboard_roi: reg_refined: video_33 status=fallback_worsened err_before=4.68px err_after=4.68px err_white=4.68px err_black=4.68px frames=96
+2026-03-24 01:01:14 I tivit.train.loop: [train] epoch=4 step=20 avg_loss=0.7560
+2026-03-24 01:15:39 I tivit.train.loop: [train] epoch=4 step=30 avg_loss=0.7593
+2026-03-24 01:17:12 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.30px err_after=5.30px err_white=5.30px err_black=5.30px frames=96
+2026-03-24 01:30:06 I tivit.train.loop: [train] epoch=4 step=40 avg_loss=0.7432
+2026-03-24 01:44:32 I tivit.train.loop: [train] epoch=4 step=50 avg_loss=0.7483
+2026-03-24 01:44:32 I tivit.train.loop: [train] epoch=4 metrics={'loss': 0.7483009713888168, 'pitch': 0.36723280906677247, 'onset': 0.2032293713092804, 'offset': 0.17783878728747368, 'hand': 0.0, 'clef': 0.0, 'total': 0.7483009713888168}
+2026-03-24 01:47:09 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-24 01:49:33 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
+2026-03-24 01:52:00 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.33px err_after=5.33px err_white=5.33px err_black=5.33px frames=96
+2026-03-24 01:55:26 I tivit.train.loop: [eval] epoch=4 metrics={'loss': 0.6397370364930894, 'pitch': 0.33465173674954307, 'onset': 0.16073478509982428, 'offset': 0.14435052002469698, 'hand': 0.0, 'clef': 0.0, 'total': 0.6397370364930894}
+2026-03-24 01:55:26 I tivit.train.loop: Saved checkpoint logs/pianovam_hdf5_randstart/checkpoints/epoch_4.pt
+2026-03-24 01:55:36 W tivit.data.roi.keyboard_roi: reg_refined: video_38 status=fallback_worsened err_before=5.40px err_after=5.40px err_white=5.40px err_black=5.40px frames=96
+2026-03-24 01:57:08 W tivit.data.roi.keyboard_roi: reg_refined: video_33 status=fallback_worsened err_before=4.68px err_after=4.68px err_white=4.68px err_black=4.68px frames=96
+2026-03-24 02:01:29 W tivit.data.roi.keyboard_roi: reg_refined: video_41 status=fallback_worsened err_before=5.26px err_after=5.26px err_white=5.26px err_black=5.26px frames=96
+2026-03-24 02:09:58 I tivit.train.loop: [train] epoch=5 step=10 avg_loss=0.8205
+2026-03-24 02:15:52 W tivit.data.roi.keyboard_roi: reg_refined: video_31 status=fallback_worsened err_before=5.30px err_after=5.30px err_white=5.30px err_black=5.30px frames=96
+2026-03-24 02:17:25 W tivit.data.roi.keyboard_roi: reg_refined: video_16 status=fallback_worsened err_before=5.24px err_after=5.24px err_white=5.24px err_black=5.24px frames=96
+2026-03-24 02:24:27 I tivit.train.loop: [train] epoch=5 step=20 avg_loss=0.7493
+2026-03-24 02:38:52 I tivit.train.loop: [train] epoch=5 step=30 avg_loss=0.7454
+2026-03-24 02:53:17 I tivit.train.loop: [train] epoch=5 step=40 avg_loss=0.7539
+2026-03-24 02:56:21 W tivit.data.roi.keyboard_roi: reg_refined: video_33 status=fallback_worsened err_before=4.68px err_after=4.68px err_white=4.68px err_black=4.68px frames=96
+2026-03-24 02:59:14 W tivit.data.roi.keyboard_roi: reg_refined: video_18 status=fallback_worsened err_before=4.68px err_after=4.68px err_white=4.68px err_black=4.68px frames=96
+2026-03-24 03:02:11 W tivit.data.roi.keyboard_roi: reg_refined: video_16 status=fallback_worsened err_before=5.24px err_after=5.24px err_white=5.24px err_black=5.24px frames=96
+2026-03-24 03:07:46 I tivit.train.loop: [train] epoch=5 step=50 avg_loss=0.7680
+2026-03-24 03:07:46 I tivit.train.loop: [train] epoch=5 metrics={'loss': 0.7679859685897827, 'pitch': 0.36413118332624433, 'onset': 0.21027859136462212, 'offset': 0.19357619620859623, 'hand': 0.0, 'clef': 0.0, 'total': 0.7679859685897827}
+2026-03-24 03:10:23 W tivit.data.roi.keyboard_roi: reg_refined: video_12 status=fallback_worsened err_before=5.38px err_after=5.38px err_white=5.38px err_black=5.38px frames=96
+2026-03-24 03:12:47 W tivit.data.roi.keyboard_roi: reg_refined: video_39 status=fallback_worsened err_before=5.50px err_after=5.50px err_white=5.50px err_black=5.50px frames=96
