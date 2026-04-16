@@ -128,3 +128,6 @@ grep -n "metrics={'loss'" logs/pianovam_hdf5_baseline/train.log
 python scripts/convert_pianovam_all.py \
   --root "$PIANOVAM_ROOT" \
   --out "$PIANOVAM_HDF5_ROOT"
+
+
+# NEW SERVER CHANGES!
