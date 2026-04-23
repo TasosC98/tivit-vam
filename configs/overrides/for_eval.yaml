@@ -1,0 +1,17 @@
+# Override config to use environment variables and correct paths
+experiment:
+  deterministic: false
+
+dataset:
+  root_dir: /raid_storage/data_achatzigiannis/PianoVAM_v1.0  # ← Real path
+  annotations_root: ${PIANOVAM_ROOT}
+  hdf5_root: /raid_storage/data_achatzigiannis/PianoVAM_v1.0/HDF5
+  batch_size: 2
+  num_workers: 0
+  split_val: val
+  split_test: test
+  preprocessed_format: hdf5  # Use HDF5 for faster evaluation
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/manual_training
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/manual_training/checkpoints

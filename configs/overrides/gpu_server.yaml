@@ -1,0 +1,15 @@
+# configs/overrides/gpu_server.yaml
+dataset:
+  root_dir: ${PIANOVAM_ROOT}
+  hdf5_root: ${PIANOVAM_HDF5_ROOT}
+  batch_size: 4  # Can increase on GPU
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-vam/logs
+  checkpoint_dir: /home/achatzigiannis/tivit-vam/logs/checkpoints
+
+training:
+  amp: true      # Enable Mixed Precision (GPU acceleration)
+  batch_size: 4
+  num_workers: 4  # Adjust based on CPU cores
+  epochs: 200

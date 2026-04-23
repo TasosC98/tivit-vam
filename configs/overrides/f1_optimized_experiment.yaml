@@ -1,0 +1,164 @@
+# Experiment: F1 Score Optimization (Target: 0.42)
+# Optimized configuration for PianoVAM training with GPU
+
+experiment:
+  name: F1_Optimized_Experiment_v1
+  seed: 1332
+  deterministic: true
+
+# Dataset for PianoVAM
+dataset:
+  name: PianoVAM
+  root_dir: ${PIANOVAM_ROOT}
+  annotations_root: ${PIANOVAM_ROOT}
+  label_format: midi
+  frames: 96
+  resize: [180, 1536]
+  tiles: 3
+  channels: 3
+  grayscale: true
+  normalize: true
+  batch_size: 8
+  num_workers: 4
+  max_clips: null  # Use all available clips
+
+# Model configuration
+model:
+  backend: vivit
+  head_mode: frame
+  transformer:
+    d_model: 768
+    num_heads: 8
+    depth_temporal: 2
+    depth_spatial: 2
+    depth_global: 1
+    global_tokens: 2
+    mlp_ratio: 4.0
+    dropout: 0.1
+
+# Logging configuration  
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/f1_optimized_v1
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/f1_optimized_v1/checkpoints
+  tensorboard: true
+  postproc_debug: false
+
+# Optimized training hyperparameters for F1 score
+training:
+  epochs: 200
+  learning_rate: 1e-4
+  weight_decay: 0.001
+  eval_freq: 1
+  log_interval: 5
+  save_every: 1
+  amp: true
+  resume: false
+  reset_head_bias: true
+  
+  # For F1 optimization - use soft targets
+  soft_targets:
+    enabled: true
+    apply_to:
+      onset: true
+      pitch: true
+      offset: true
+    onset_kernel: [0.5, 1.0, 0.5]
+    frame_kernel: [0.5, 1.0, 0.5]
+
+  # Metrics configuration for F1
+  metrics:
+    prob_threshold: 0.005
+    prob_threshold_onset: 0.005
+    prob_threshold_offset: 0.006
+    eval_mode: both
+    patk:
+      fps: 30.0
+      onset_tolerance_ms: 100.0
+      onset_sigma: 0.2
+      onset_radius: 8
+      frame_sigma: 0.8
+      frame_radius: 4
+      threshold: 0.005
+      ignore_tail: 4
+      offset_ratio: 0.2
+      offset_min_tolerance: 0.05
+    
+    # Decoder settings for F1
+    decoder:
+      onset:
+        open: 0.005
+        hold: 0.003
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+      offset:
+        open: 0.006
+        hold: 0.0036
+        min_off: 1
+        merge_gap: 0
+        median: 1
+
+  # Loss configuration optimized for F1
+  loss:
+    pos_weight_path: null  # Will be generated during calibration
+    head_weights:
+      pitch: 1.0
+      onset: 1.0
+      offset: 1.0
+      hand: 0.0
+      clef: 0.0
+    
+    ema_alpha: 0.05
+    neg_smooth_onoff: 0.0
+    
+    heads:
+      pitch:
+        loss: bce
+        pos_weight_mode: adaptive_band
+        pos_weight_band: [2.0, 4.0]
+      onset:
+        loss: bce_with_logits
+        pos_weight_mode: adaptive_band
+        pos_weight_band: [2.0, 4.0]
+      offset:
+        loss: bce_with_logits
+        pos_weight_mode: adaptive_band
+        pos_weight_band: [2.0, 4.0]
+
+  # Model selection by F1
+  best_selection:
+    mode: calibrated_event
+    trigger: on_proxy_improvement
+    n: 1
+    write_back: false
+    sweep:
+      delta: 0.05
+      low_guard: 0.1
+    min_prob: 0.02
+    max_prob: 0.98
+
+# Decoder configuration
+decoder:
+  method: patk
+  onset_mode: hmm
+  offset_mode: prob
+  use_per_tile: true
+
+# Calibration configuration
+calibration:
+  method: threshold_sweep
+  output_path: calibration.json
+  sweep:
+    delta: 0.001
+    steps: 15
+    min_prob: 0.001
+    max_prob: 0.03
+
+# Priors (hand gating, key signature, etc.)
+priors:
+  enabled: false
+  hand_gating:
+    enabled: false
+  key_signature:
+    enabled: false

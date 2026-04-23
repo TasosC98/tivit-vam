@@ -1,0 +1,61 @@
+# Manual Training Configuration - FIXED FOR CUDA STABILITY
+# Fixed DataLoader worker crash & CUDA attention errors
+# Use with: PYTHONPATH=. python -m tivit.pipelines.train_single --config configs/default.yaml --config configs/overrides/manual_training.yaml
+
+experiment:
+  deterministic: false  # Disable determinism to avoid CUDA attention errors
+
+dataset:
+  root_dir: ${PIANOVAM_ROOT}
+  hdf5_root: ${PIANOVAM_HDF5_ROOT}
+  batch_size: 2  # FIXED: Reduced from 8 to match model architecture
+  num_workers: 0  # CRITICAL FIX: Disabled multiprocessing workers - no worker crashes
+  pin_memory: true  # Faster data transfer to GPU
+  prefetch_factor: 2
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/manual_training
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/manual_training/checkpoints
+  tensorboard: true
+
+# Optimized training for F1 score
+training:
+  epochs: 200
+  learning_rate: 1e-4
+  weight_decay: 0.001
+  eval_freq: 1  # Evaluate every epoch
+  log_interval: 5  # Print metrics every 5 steps
+  save_every: 1  # Save checkpoint every epoch
+  amp: false  # CRITICAL FIX: Disable mixed precision to avoid CUDA attention errors
+  grad_clip: 1.0
+  resume: false
+  reset_head_bias: true
+  debug_dummy_labels: false
+  
+  # Soft targets for smoother learning
+  soft_targets:
+    enabled: true
+    apply_to:
+      onset: true
+      pitch: true
+      offset: true
+    onset_kernel: [0.5, 1.0, 0.5]
+    frame_kernel: [0.5, 1.0, 0.5]
+
+  # Metrics for F1 calculation during training
+  metrics:
+    prob_threshold: 0.005  # Onset threshold
+    prob_threshold_onset: 0.005
+    prob_threshold_offset: 0.006  # Offset threshold
+    prob_temperature: 1.0
+    prob_logit_bias: 0.0
+    eval_mode: both  # Calculate F1 during training
+    patk:
+      fps: 30.0
+      onset_tolerance_ms: 100.0
+      onset_sigma: 0.2
+      onset_radius: 8
+      frame_sigma: 0.8
+      frame_radius: 4
+      threshold: 0.005
+      ignore_tail: 4

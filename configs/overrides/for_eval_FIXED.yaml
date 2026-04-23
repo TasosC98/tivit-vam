@@ -1,0 +1,15 @@
+experiment:
+  deterministic: false
+dataset:
+  root_dir: /raid_storage/data_achatzigiannis/PianoVAM_v1.0
+  annotations_root: /raid_storage/data_achatzigiannis/PianoVAM_v1.0
+  hdf5_root: /raid_storage/data_achatzigiannis/PianoVAM_v1.0/HDF5
+  batch_size: 2
+  num_workers: 0
+  split_val: val
+  split_test: test
+  split_train: train
+  preprocessed_format: raw
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/manual_training
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/manual_training/checkpoints

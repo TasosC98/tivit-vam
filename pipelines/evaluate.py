@@ -26,13 +26,13 @@ import os
 
 import torch
 
-from ..calibration.io import read_calibration
-from ..data.loaders import make_dataloader
-from ..decoder.decode import pool_roll_BT
-from ..models import build_model
-from ..metrics import event_f1, f1_from_counts
-from ..metrics.patk_metrics import frame_counts, note_event_counts, onset_event_counts
-from ..postproc.patk_decode import (
+from calibration.io import read_calibration
+from data.loaders import make_dataloader
+from decoder.decode import pool_roll_BT
+from models import build_model
+from metrics import event_f1, f1_from_counts
+from metrics.patk_metrics import frame_counts, note_event_counts, onset_event_counts
+from postproc.patk_decode import (
     PatkDecodeConfig,
     build_notes_from_peaks,
     build_notes_from_rolls,
@@ -44,12 +44,12 @@ from ..postproc.patk_decode import (
     resample_roll_btP,
     smooth_time_probs,
 )
-from ..postproc import build_decoder
-from ..pipelines._common import find_checkpoint, prepare_run, resolve_eval_split, load_model_weights, setup_runtime
-from ..train.loop import PerTileSupport, _prepare_targets
-from ..losses.multitask_loss import MultitaskLoss
-from ..utils.amp import autocast
-from ..utils.logging import log_final_result, log_stage
+from postproc import build_decoder
+from pipelines._common import find_checkpoint, prepare_run, resolve_eval_split, load_model_weights, setup_runtime
+from train.loop import PerTileSupport, _prepare_targets
+from losses.multitask_loss import MultitaskLoss
+from utils.amp import autocast
+from utils.logging import log_final_result, log_stage
 
 
 def _apply_eval_overrides(

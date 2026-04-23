@@ -7,7 +7,7 @@ training:
   debug_dummy_labels: false
   log_interval: 1 # was 25
   save_every: 1
-  amp: false
+  amp: true
   resume: false
   reset_head_bias: true
 

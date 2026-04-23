@@ -153,7 +153,6 @@ class FactorizedSpaceTimeEncoder(nn.Module):
             x = x[:, self.global_tokens :, :]
         return x
 
-
 class TiViTPiano(nn.Module):
     """Factorized ViViT encoder with multi-task heads."""
 
@@ -229,6 +228,17 @@ class TiViTPiano(nn.Module):
         self._patch_sh = self.embed.proj.stride[1]
         self._patch_sw = self.embed.proj.stride[2]
 
+    def to(self, *args, **kwargs):
+        """Override to() to handle lazy-initialized encoder."""
+        # Call parent to() to move all initialized components
+        result = super().to(*args, **kwargs)
+        
+        # If encoder was already initialized, ensure it's also moved
+        if hasattr(self, 'encoder') and self.encoder is not None:
+            self.encoder = self.encoder.to(*args, **kwargs)
+        
+        return result
+
     def _init_encoder_if_needed(self, t_tokens: int, s_tokens: int) -> None:
         """Lazy-init the encoder once token factors are known to save memory."""
         if self.encoder is None:
@@ -245,6 +255,11 @@ class TiViTPiano(nn.Module):
                 global_tokens=int(self.encoder_cfg["global_tokens"]),
                 tiles=int(self.encoder_cfg["tiles"]),
             )
+            
+            # Ensure encoder is on the same device as the rest of the model
+            # Infer device from the embedding layer
+            current_device = next(self.embed.parameters()).device
+            self.encoder = self.encoder.to(current_device)
 
     def enable_tiling_debug(self) -> None:
         """Allow a single detailed tiling log when logger level is DEBUG."""
