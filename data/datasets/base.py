@@ -140,7 +140,19 @@ class BasePianoDataset(Dataset):
             fps=self.decode_fps,
             canonical_hw=self.canonical_hw,
         )
-        self.soft_target_cfg: Optional[SoftTargetConfig] = resolve_soft_target_config(self.target_cfg)
+        training_cfg = self.full_cfg.get("training", {}) if isinstance(self.full_cfg, Mapping) else {}
+        soft_target_source: Optional[Mapping[str, Any]] = None
+        if isinstance(training_cfg, Mapping):
+            training_soft = training_cfg.get("soft_targets")
+            if isinstance(training_soft, Mapping):
+                soft_target_source = training_soft
+        if soft_target_source is None:
+            nested_soft = self.target_cfg.get("soft_targets")
+            if isinstance(nested_soft, Mapping):
+                soft_target_source = nested_soft
+        if soft_target_source is None:
+            soft_target_source = self.target_cfg
+        self.soft_target_cfg: Optional[SoftTargetConfig] = resolve_soft_target_config(soft_target_source)
 
         root = self._resolve_root(self.dataset_cfg.get("root_dir"))
         manifest = self._resolve_manifest()

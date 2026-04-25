@@ -22,7 +22,7 @@ from tivit.pipelines._common import find_checkpoint, load_model_weights, setup_r
 from tivit.pipelines.evaluate import _apply_eval_overrides, _resolve_event_tolerance, _resolve_hop_seconds
 from tivit.postproc.hand_gate_runtime import apply_hand_gate_from_config
 from tivit.postproc.key_prior_runtime import apply_key_prior_from_config
-from tivit.train.loop import _prepare_targets
+from tivit.train.loop import PerTileSupport, _prepare_targets
 from tivit.utils.amp import autocast
 from tivit.utils.logging import log_stage
 
@@ -96,6 +96,7 @@ def run_threshold_sweep(
         training_cfg = {}
     amp_enabled = bool(training_cfg.get("amp", False)) and torch.cuda.is_available()
     debug_dummy_labels = bool(training_cfg.get("debug_dummy_labels", False))
+    per_tile_support = PerTileSupport(cfg_eval, getattr(loader, "dataset", None), phase="eval")
 
     ckpt_path = find_checkpoint(cfg_eval, checkpoint)
     if ckpt_path:
@@ -121,7 +122,9 @@ def run_threshold_sweep(
                 raise ValueError("Batch is missing tensor key 'video'")
             x = video.to(device=device, non_blocking=True)
             with autocast(device, enabled=amp_enabled):
-                outputs = model(x, return_per_tile=False)
+                outputs = model(x, return_per_tile=per_tile_support.request_per_tile_outputs)
+                per_tile_ctx = per_tile_support.build_context(outputs, batch)
+                outputs = per_tile_support.apply_fusion(outputs, per_tile_ctx)
                 targets = _prepare_targets(outputs, batch, device, debug_dummy_labels=debug_dummy_labels)
 
             logits_map: dict[str, torch.Tensor] = {}

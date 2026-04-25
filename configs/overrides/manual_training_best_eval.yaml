@@ -1,0 +1,55 @@
+# Low-logit evaluation regime for manual_training checkpoints.
+# Use on top of:
+#   - configs/default.yaml
+#   - configs/overrides/manual_training.yaml
+#
+# Expected workflow:
+#   1. Run calibration with manual_training_best_calibration.yaml
+#   2. Run eval_single with this file so the saved calibration decoder is reused
+#
+# This file intentionally keeps the decoder permissive because the current
+# manual_training checkpoints peak around 0.07-0.09 on onset/offset.
+
+dataset:
+  root_dir: /raid_storage/data_achatzigiannis/PianoVAM_v1.0
+  annotations_root: /raid_storage/data_achatzigiannis/PianoVAM_v1.0
+  hdf5_root: /raid_storage/data_achatzigiannis/PianoVAM_v1.0/HDF5
+  preprocessed_format: hdf5
+  split_val: valid
+  split_test: test
+  batch_size: 2
+  num_workers: 0
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/manual_training
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/manual_training/checkpoints
+  postproc_debug: false
+
+training:
+  metrics:
+    eval_mode: both
+    # Safe low-range fallback thresholds when a calibration file is missing.
+    prob_threshold_onset: 0.006
+    prob_threshold_offset: 0.007
+    decoder:
+      onset:
+        open: 0.006
+        low_ratio: 0.60
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+      offset:
+        open: 0.007
+        low_ratio: 0.60
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+    patk:
+      threshold: 0.0075
+
+calibration:
+  # eval_single / evaluate will read this file and inject the saved decoder
+  # thresholds into training.metrics.decoder before decoding.
+  output_path: calibration/lowlogit_manual_training_v1.json

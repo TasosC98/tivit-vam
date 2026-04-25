@@ -1,0 +1,128 @@
+# Retraining rescue config for the current manual_training setup.
+# Goal:
+#   - Stay compatible with the server paths / single-GPU workflow
+#   - Move closer to the stronger historical PianoVAM regime
+#   - Avoid the overly strict high-threshold decoder regime
+#
+# Use on top of:
+#   - configs/default.yaml
+#   - configs/overrides/manual_training.yaml
+
+experiment:
+  deterministic: false
+
+dataset:
+  root_dir: /raid_storage/data_achatzigiannis/PianoVAM_v1.0
+  annotations_root: /raid_storage/data_achatzigiannis/PianoVAM_v1.0
+  hdf5_root: /raid_storage/data_achatzigiannis/PianoVAM_v1.0/HDF5
+  preprocessed_format: hdf5
+  split_train: train
+  split_val: valid
+  split_test: test
+  frames: 96
+  batch_size: 1
+  num_workers: 0
+  registration:
+    enable: true
+    cache_path: reg_refined_pianovam.json
+    source: metadata
+    interp: bilinear
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/manual_training_rescue
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/manual_training_rescue/checkpoints
+  tensorboard: true
+  postproc_debug: false
+
+training:
+  epochs: 200
+  learning_rate: 3e-5
+  weight_decay: 0.01
+  eval_freq: 1
+  log_interval: 5
+  save_every: 1
+  amp: false
+  resume: false
+  reset_head_bias: true
+
+  soft_targets:
+    enabled: true
+    apply_to:
+      onset: true
+      pitch: true
+      offset: false
+    onset_kernel: [0.5, 1.0, 0.5]
+    frame_kernel: [0.5, 1.0, 0.5]
+
+  metrics:
+    eval_mode: both
+    prob_threshold: 0.006
+    prob_threshold_onset: 0.006
+    prob_threshold_offset: 0.007
+    patk:
+      fps: 30.0
+      onset_tolerance_ms: 100.0
+      onset_sigma: 0.2
+      onset_radius: 8
+      frame_sigma: 0.8
+      frame_radius: 4
+      threshold: 0.0075
+      ignore_tail: 4
+      offset_ratio: 0.2
+      offset_min_tolerance: 0.05
+    decoder:
+      onset:
+        open: 0.006
+        hold: 0.0036
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+      offset:
+        open: 0.007
+        hold: 0.0042
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+
+  loss:
+    head_weights:
+      pitch: 1.0
+      onset: 1.0
+      offset: 1.0
+      hand: 0.0
+      clef: 0.0
+    ema_alpha: 0.05
+    neg_smooth_onoff: 0.0
+    heads:
+      pitch:
+        loss: bce
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [2.0, 4.0]
+      onset:
+        loss: bce
+        pos_weight_mode: fixed
+        pos_weight: 2.0
+        pos_weight_band: null
+        focal_gamma: 2.0
+        focal_alpha: 0.25
+        prior_mean: 0.006626
+        prior_weight: 0.0
+      offset:
+        loss: bce
+        pos_weight_mode: fixed
+        pos_weight: 2.0
+        pos_weight_band: null
+        focal_gamma: 2.5
+        focal_alpha: 0.2
+        prior_mean: 0.00608
+        prior_weight: 0.0
+      hand:
+        loss: ce
+      clef:
+        loss: ce
+
+train:
+  accumulate_steps: 4

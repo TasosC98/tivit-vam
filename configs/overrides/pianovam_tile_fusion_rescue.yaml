@@ -1,0 +1,58 @@
+experiment:
+  name: pianovam_hdf5_tile_fusion_rescue
+
+logging:
+  log_dir: logs/pianovam_hdf5_tile_fusion_rescue
+  checkpoint_dir: logs/pianovam_hdf5_tile_fusion_rescue/checkpoints
+  postproc_debug: false
+
+training:
+  metrics:
+    eval_mode: both
+    prob_threshold_onset: 0.12
+    prob_threshold_offset: 0.10
+    decoder:
+      onset:
+        open: 0.12
+        hold: 0.072
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+      offset:
+        open: 0.10
+        hold: 0.060
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+  loss:
+    per_tile:
+      enabled: true
+      heads: [pitch, onset, offset]
+    heads:
+      onset:
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [3.0, 8.0]
+        prior_weight: 0.2
+      offset:
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [3.0, 8.0]
+        prior_weight: 0.2
+
+decoder:
+  global_fusion:
+    enabled: true
+    mode: masked_mean
+    cushion_keys: 2
+    apply_to: [pitch, onset, offset]
+
+calibration:
+  output_path: calibration.json
+  sweep:
+    delta: 0.05
+    steps: 13
+    min_prob: 0.02
+    max_prob: 0.50

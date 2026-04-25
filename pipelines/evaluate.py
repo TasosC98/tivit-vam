@@ -30,7 +30,7 @@ from calibration.io import read_calibration
 from data.loaders import make_dataloader
 from decoder.decode import pool_roll_BT
 from models import build_model
-from metrics import event_f1, f1_from_counts
+from metrics import event_f1, f1_from_counts, key_state_counts, summarize_key_state_counts
 from metrics.patk_metrics import frame_counts, note_event_counts, onset_event_counts
 from postproc.patk_decode import (
     PatkDecodeConfig,
@@ -107,6 +107,32 @@ def _resolve_eval_mode(metrics_cfg: Mapping[str, Any]) -> str:
     if mode not in {"native", "patk", "both"}:
         mode = "native"
     return mode
+
+
+def _resolve_pitch_probe_threshold(metrics_cfg: Mapping[str, Any]) -> float:
+    if not isinstance(metrics_cfg, Mapping):
+        return 0.5
+    probe_cfg = metrics_cfg.get("key_probe")
+    raw = None
+    if isinstance(probe_cfg, Mapping):
+        raw = probe_cfg.get("threshold")
+    if raw is None:
+        patk_cfg = metrics_cfg.get("patk")
+        if isinstance(patk_cfg, Mapping):
+            raw = patk_cfg.get("threshold")
+    if raw is None:
+        raw = metrics_cfg.get("prob_threshold_pitch")
+    if raw is None:
+        raw = metrics_cfg.get("prob_threshold")
+    try:
+        threshold = float(raw)
+    except (TypeError, ValueError):
+        threshold = 0.5
+    if threshold < 0.0:
+        threshold = 0.0
+    if threshold > 1.0:
+        threshold = 1.0
+    return threshold
 
 
 def _resolve_calibration_path(cfg: Mapping[str, Any]) -> Path | None:
@@ -230,6 +256,19 @@ def evaluate(
     event_counts = None
     event_counts_anypitch = None
     event_density = None
+    pitch_key_counts = {
+        "tp": 0.0,
+        "fp": 0.0,
+        "fn": 0.0,
+        "tn": 0.0,
+        "frames": 0.0,
+        "frames_exact": 0.0,
+        "jaccard_sum": 0.0,
+        "polyphony_abs_err_sum": 0.0,
+        "pred_active_sum": 0.0,
+        "target_active_sum": 0.0,
+    }
+    pitch_probe_threshold = _resolve_pitch_probe_threshold(metrics_cfg)
     postproc_debug = bool(
         (cfg_eval.get("logging", {}) if isinstance(cfg_eval, Mapping) else {}).get("postproc_debug", False)
     )
@@ -279,6 +318,7 @@ def evaluate(
                     # Τύπωσε μία φορά μόνο
                     os.environ["DEBUG_PRED"] = "0"
                 per_tile_ctx = per_tile_support.build_context(outputs, batch)
+                outputs = per_tile_support.apply_fusion(outputs, per_tile_ctx)
                 targets = _prepare_targets(outputs, batch, device, debug_dummy_labels=debug_dummy_labels)
                 loss, parts = loss_fn(outputs, targets, update_state=False, per_tile=per_tile_ctx)
 
@@ -312,6 +352,24 @@ def evaluate(
                     )
                     debug_logged = True
 
+            pitch_logits = outputs.get("pitch_logits")
+            target_pitch = targets.get("pitch")
+            if torch.is_tensor(pitch_logits) and torch.is_tensor(target_pitch):
+                pred_tensor = pitch_logits
+                target_tensor = target_pitch
+                if pred_tensor.dim() == 2:
+                    pred_tensor = pred_tensor.unsqueeze(0)
+                if target_tensor.dim() == 2:
+                    target_tensor = target_tensor.unsqueeze(0)
+                if pred_tensor.dim() == 3 and target_tensor.dim() == 3:
+                    if target_tensor.shape[1] != pred_tensor.shape[1]:
+                        target_tensor = pool_roll_BT(target_tensor, pred_tensor.shape[1])
+                    if target_tensor.shape[2] == pred_tensor.shape[2]:
+                        pred_mask = (torch.sigmoid(pred_tensor).detach() >= pitch_probe_threshold).cpu().numpy()
+                        target_mask = (target_tensor > 0.5).detach().cpu().numpy()
+                        batch_counts = key_state_counts(pred_mask, target_mask)
+                        for key, value in batch_counts.items():
+                            pitch_key_counts[key] = float(pitch_key_counts.get(key, 0.0) or 0.0) + float(value)
 
             if eval_mode in {"native", "both"} and event_counts is not None:
                 logits_map: dict[str, torch.Tensor] = {}
@@ -500,6 +558,10 @@ def evaluate(
             metrics[f"{head}_pred_events_per_clip"] = pred_per_clip
             metrics[f"{head}_gt_events_per_clip"] = gt_per_clip
             metrics[f"{head}_event_density_ratio"] = pred_per_clip / max(gt_per_clip, 1e-8)
+
+    if float(pitch_key_counts.get("frames", 0.0) or 0.0) > 0.0:
+        metrics["pitch_probe_threshold"] = float(pitch_probe_threshold)
+        metrics.update(summarize_key_state_counts(pitch_key_counts))
 
     if patk_counts is not None:
         frame_summary = f1_from_counts(

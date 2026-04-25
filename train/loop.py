@@ -29,7 +29,12 @@ from tivit.core.config import DEFAULT_CONFIG_PATH, load_experiment_config
 from tivit.core.determinism import configure_determinism, resolve_deterministic_flag, resolve_seed
 from tivit.data.loaders import make_dataloader
 from tivit.data.targets.identifiers import canonical_video_id
-from tivit.decoder.global_fusion import build_batch_tile_mask
+from tivit.decoder.global_fusion import (
+    GlobalFusionConfig,
+    build_batch_tile_mask,
+    fuse_outputs_with_tile_mask,
+    resolve_global_fusion_config,
+)
 from tivit.decoder.tile_support_cache import CacheScope, TileSupportCache
 from tivit.losses.multitask_loss import MultitaskLoss
 from tivit.models import build_model
@@ -109,10 +114,14 @@ class PerTileSupport:
         training_cfg = cfg.get("training", {}) if isinstance(cfg, Mapping) else {}
         loss_cfg = training_cfg.get("loss", {}) if isinstance(training_cfg, Mapping) else {}
         per_tile_cfg = loss_cfg.get("per_tile", {}) or {}
-        self.enabled = bool(per_tile_cfg.get("enabled", False))
+        self.loss_enabled = bool(per_tile_cfg.get("enabled", False))
         self.heads = tuple(str(h).lower() for h in per_tile_cfg.get("heads", ("pitch", "onset", "offset")))
-        decoder_cfg = cfg.get("decoder", {}).get("global_fusion", {}) if isinstance(cfg, Mapping) else {}
-        default_cushion = int((decoder_cfg or {}).get("cushion_keys", 0))
+        decoder_cfg = cfg.get("decoder", {}) if isinstance(cfg, Mapping) else {}
+        self.global_fusion_cfg: GlobalFusionConfig = resolve_global_fusion_config(
+            decoder_cfg if isinstance(decoder_cfg, Mapping) else None
+        )
+        self.enabled = bool(self.loss_enabled or self.global_fusion_cfg.needs_per_tile)
+        default_cushion = int(self.global_fusion_cfg.cushion_keys)
         cushion_override = per_tile_cfg.get("mask_cushion_keys")
         self.mask_cushion = default_cushion if cushion_override is None else int(cushion_override)
         dataset_cfg = cfg.get("dataset", {}) if isinstance(cfg, Mapping) else {}
@@ -126,16 +135,24 @@ class PerTileSupport:
     def request_per_tile_outputs(self) -> bool:
         return self.enabled
 
+    @property
+    def fusion_enabled(self) -> bool:
+        return bool(self.global_fusion_cfg.enabled)
+
     def build_context(self, outputs: Mapping[str, Any], batch: Mapping[str, Any]) -> Mapping[str, Any] | None:
         if not self.enabled:
             return None
-        pitch_tile = outputs.get("pitch_tile")
-        onset_tile = outputs.get("onset_tile")
-        offset_tile = outputs.get("offset_tile")
-        if not (torch.is_tensor(pitch_tile) and torch.is_tensor(onset_tile) and torch.is_tensor(offset_tile)):
+        tile_outputs = {
+            "pitch": outputs.get("pitch_tile"),
+            "onset": outputs.get("onset_tile"),
+            "offset": outputs.get("offset_tile"),
+        }
+        available = [tensor for tensor in tile_outputs.values() if torch.is_tensor(tensor)]
+        if not available:
             return None
-        batch_size = int(pitch_tile.shape[0])
-        key_dim = int(pitch_tile.shape[-1])
+        ref_tensor = available[0]
+        batch_size = int(ref_tensor.shape[0])
+        key_dim = int(ref_tensor.shape[-1])
         canonical_hw = getattr(self.reg_refiner, "canonical_hw", None)
         mask_batch = build_batch_tile_mask(
             _resolve_batch_clip_ids(batch, batch_size),
@@ -148,14 +165,30 @@ class PerTileSupport:
             n_keys=key_dim,
             canonical_hw=canonical_hw,
         )
-        return {
-            "enabled": True,
+        context: dict[str, Any] = {
+            "enabled": self.loss_enabled,
             "heads": self.heads,
             "mask": mask_batch.tensor,
-            "pitch": pitch_tile,
-            "onset": onset_tile,
-            "offset": offset_tile,
         }
+        for head, tensor in tile_outputs.items():
+            if torch.is_tensor(tensor):
+                context[head] = tensor
+        return context
+
+    def apply_fusion(
+        self,
+        outputs: Mapping[str, torch.Tensor],
+        context: Mapping[str, Any] | None,
+    ) -> Mapping[str, torch.Tensor]:
+        """Replace global logits with tile-masked fused logits when enabled."""
+
+        if not self.fusion_enabled or not isinstance(context, Mapping):
+            return outputs
+        mask = context.get("mask")
+        if not torch.is_tensor(mask):
+            return outputs
+        fused, _ = fuse_outputs_with_tile_mask(outputs, mask, self.global_fusion_cfg)
+        return fused
 
 
 def _fabricate_dummy_targets(
@@ -271,6 +304,8 @@ def _compute_loss_for_batch(
     with autocast(device, enabled=amp_enabled):
         outputs = model(x, return_per_tile=request_per_tile)
         per_tile_ctx = per_tile_support.build_context(outputs, batch) if per_tile_support is not None else None
+        if per_tile_support is not None:
+            outputs = per_tile_support.apply_fusion(outputs, per_tile_ctx)
         targets = _prepare_targets(outputs, batch, device, debug_dummy_labels=debug_dummy_labels)
         loss, parts = loss_fn(outputs, targets, update_state=update_state, per_tile=per_tile_ctx)
     return loss, parts

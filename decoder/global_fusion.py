@@ -472,12 +472,44 @@ def fuse_tile_logits(tile_logits: torch.Tensor, tile_mask: torch.Tensor, *, mode
     return fused
 
 
+def fuse_outputs_with_tile_mask(
+    outputs: Mapping[str, torch.Tensor],
+    tile_mask: torch.Tensor | np.ndarray | None,
+    fusion_cfg: GlobalFusionConfig | Mapping[str, Any] | None,
+) -> tuple[dict[str, torch.Tensor], Tuple[str, ...]]:
+    """Fuse per-tile logits into global logits using the configured tile mask."""
+
+    if isinstance(fusion_cfg, GlobalFusionConfig):
+        resolved = fusion_cfg
+    else:
+        resolved = resolve_global_fusion_config(fusion_cfg if isinstance(fusion_cfg, Mapping) else None)
+
+    merged = dict(outputs)
+    if not resolved.enabled or tile_mask is None:
+        return merged, ()
+
+    applied: List[str] = []
+    for head in resolved.apply_to:
+        tile_key = f"{head}_tile"
+        global_key = f"{head}_logits"
+        tile_logits = outputs.get(tile_key)
+        if not torch.is_tensor(tile_logits):
+            continue
+        fused_logits = fuse_tile_logits(tile_logits, tile_mask, mode=resolved.mode)
+        merged[global_key] = fused_logits
+        merged[f"{head}_global"] = fused_logits
+        applied.append(str(head))
+
+    return merged, tuple(applied)
+
+
 __all__ = [
     "GlobalFusionConfig",
     "FusionDebugState",
     "resolve_global_fusion_config",
     "build_batch_tile_mask",
     "fuse_tile_logits",
+    "fuse_outputs_with_tile_mask",
     "resolve_tile_key_mask",
     "TileMaskBatch",
 ]

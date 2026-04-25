@@ -1,0 +1,59 @@
+# Low-logit post-training calibration regime for the current manual_training run.
+# Use on top of:
+#   - configs/default.yaml
+#   - configs/overrides/manual_training.yaml
+#
+# Important:
+#   The manual_training checkpoints produce onset/offset probabilities around
+#   0.005-0.09, so the older 0.45x decoder regime from the historical
+#   pianovam_hdf5_randstart run is far too strict and collapses recall to zero.
+
+dataset:
+  root_dir: /raid_storage/data_achatzigiannis/PianoVAM_v1.0
+  annotations_root: /raid_storage/data_achatzigiannis/PianoVAM_v1.0
+  hdf5_root: /raid_storage/data_achatzigiannis/PianoVAM_v1.0/HDF5
+  preprocessed_format: hdf5
+  split_val: valid
+  split_test: test
+  batch_size: 2
+  num_workers: 0
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/manual_training
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/manual_training/checkpoints
+  postproc_debug: false
+
+training:
+  metrics:
+    eval_mode: both
+    # Keep the sweep in the low-probability regime that the manual_training
+    # checkpoints actually emit.
+    prob_threshold_onset: 0.008
+    prob_threshold_offset: 0.010
+    decoder:
+      onset:
+        open: 0.008
+        low_ratio: 0.60
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+      offset:
+        open: 0.010
+        low_ratio: 0.60
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+
+calibration:
+  method: threshold_sweep
+  output_path: calibration/lowlogit_manual_training_v1.json
+  threshold_priors_path: null
+  sweep:
+    # Fine-grained low-range sweep for checkpoints whose max probs stay below
+    # ~0.1. This is the regime suggested by the eval logs from epoch 125/200.
+    delta: 0.005
+    steps: 25
+    min_prob: 0.001
+    max_prob: 0.12
