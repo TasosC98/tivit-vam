@@ -38,6 +38,7 @@ class PatkDecodeConfig:
     frame_sigma: float
     frame_radius: int
     threshold: float
+    top_k: int
     ignore_tail: int
     onset_tolerance: float
     offset_ratio: float
@@ -57,6 +58,7 @@ class PatkDecodeConfig:
             frame_sigma=float(patk_cfg.get("frame_sigma", 0.8) or 0.8),
             frame_radius=int(patk_cfg.get("frame_radius", 4) or 4),
             threshold=float(patk_cfg.get("threshold", 0.5) or 0.5),
+            top_k=max(0, int(patk_cfg.get("top_k", 0) or 0)),
             ignore_tail=int(patk_cfg.get("ignore_tail", 4) or 4),
             onset_tolerance=max(0.0, onset_tol_ms / 1000.0),
             offset_ratio=float(patk_cfg.get("offset_ratio", 0.2) or 0.2),
@@ -250,7 +252,19 @@ def compute_target_length(t_in: int, hop_seconds: float, *, fps: float) -> int:
     return max(1, t_out)
 
 
-def clamp_probs(probs: torch.Tensor, threshold: float) -> torch.Tensor:
-    """Return a boolean mask from probabilities using a fixed threshold."""
-    return probs >= float(threshold)
+def clamp_probs(probs: torch.Tensor, threshold: float, *, top_k: int = 0) -> torch.Tensor:
+    """Return a boolean mask from probabilities using threshold plus optional top-k cap."""
 
+    mask = probs >= float(threshold)
+    k = int(top_k)
+    if k <= 0 or probs.numel() == 0:
+        return mask
+    if probs.dim() < 1:
+        return mask
+    pitch_dim = int(probs.shape[-1])
+    if k >= pitch_dim:
+        return mask
+    top_idx = probs.topk(k, dim=-1).indices
+    top_mask = torch.zeros_like(mask, dtype=torch.bool)
+    top_mask.scatter_(-1, top_idx, True)
+    return mask & top_mask

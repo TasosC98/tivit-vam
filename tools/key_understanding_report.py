@@ -29,6 +29,12 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         help="Optional override for key_probe/patk pitch threshold",
     )
+    ap.add_argument(
+        "--pitch-top-k",
+        type=int,
+        default=None,
+        help="Optional per-frame top-k cap for key_probe/patk pitch masks",
+    )
     ap.add_argument("--max-batches", dest="max_batches", type=int)
     ap.add_argument("--max-clips", type=int)
     ap.add_argument("--frames", type=int)
@@ -50,6 +56,7 @@ def _write_override(
     log_dir: Path,
     calibration_path: str | None,
     pitch_threshold: float | None,
+    pitch_top_k: int | None,
 ) -> None:
     payload: dict[str, object] = {
         "logging": {
@@ -60,15 +67,21 @@ def _write_override(
         payload["calibration"] = {
             "output_path": str(Path(calibration_path).expanduser().as_posix()),
         }
+    metrics_override: dict[str, dict[str, float | int]] = {}
     if pitch_threshold is not None:
+        metrics_override["key_probe"] = {"threshold": float(pitch_threshold)}
+        metrics_override["patk"] = {"threshold": float(pitch_threshold)}
+    if pitch_top_k is not None:
+        key_probe = dict(metrics_override.get("key_probe", {}) or {})
+        patk = dict(metrics_override.get("patk", {}) or {})
+        key_probe["top_k"] = max(0, int(pitch_top_k))
+        patk["top_k"] = max(0, int(pitch_top_k))
+        metrics_override["key_probe"] = key_probe
+        metrics_override["patk"] = patk
+    if metrics_override:
         payload["training"] = {
             "metrics": {
-                "key_probe": {
-                    "threshold": float(pitch_threshold),
-                },
-                "patk": {
-                    "threshold": float(pitch_threshold),
-                },
+                **metrics_override,
             }
         }
     with path.open("w", encoding="utf-8") as handle:
@@ -81,7 +94,7 @@ def main() -> None:
 
     configs = args.config or [Path("configs/default.yaml")]
     managed_tmp: tempfile.TemporaryDirectory[str] | None = None
-    if args.calibration_path or args.pitch_threshold is not None:
+    if args.calibration_path or args.pitch_threshold is not None or args.pitch_top_k is not None:
         managed_tmp = tempfile.TemporaryDirectory(prefix="key-understanding-report-")
         override_dir = Path(managed_tmp.name)
         override_path = override_dir / "_auto_report_override.yaml"
@@ -90,6 +103,7 @@ def main() -> None:
             log_dir=override_dir,
             calibration_path=args.calibration_path,
             pitch_threshold=args.pitch_threshold,
+            pitch_top_k=args.pitch_top_k,
         )
         configs = [*configs, override_path]
 
@@ -112,6 +126,7 @@ def main() -> None:
 
     print("\nKey Understanding Report")
     print(f"Pitch threshold: {metrics.get('pitch_probe_threshold', 'n/a')}")
+    print(f"Pitch top-k: {metrics.get('pitch_probe_top_k', 'n/a')}")
     print(f"Pressed-key precision: {_pct(metrics.get('pitch_active_precision'))}")
     print(f"Pressed-key recall: {_pct(metrics.get('pitch_active_recall'))}")
     print(f"Pressed-key F1: {_pct(metrics.get('pitch_active_f1'))}")

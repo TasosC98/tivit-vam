@@ -54,6 +54,7 @@ from ..cache.frame_target_cache import FrameTargetCache, NullFrameTargetCache
 from ..targets.identifiers import canonical_video_id
 
 LOGGER = logging.getLogger(__name__)
+_HDF5_FALLBACK_LOGGED: set[str] = set()
 
 
 @dataclass
@@ -228,7 +229,7 @@ class BasePianoDataset(Dataset):
 
     # ---- core helpers ------------------------------------------------------
 
-    def _decode_clip(self, path: Path, *, start_frame: int) -> torch.Tensor:
+    def _decode_clip(self, path: Path, *, start_frame: int, fallback_path: Optional[Path] = None) -> torch.Tensor:
         """Decode video to tensor using shared reader config."""
         cfg = VideoReaderConfig(
             frames=self.frames,
@@ -243,9 +244,17 @@ class BasePianoDataset(Dataset):
                 from ..decode.hdf5_reader import load_clip_from_hdf5
 
                 return load_clip_from_hdf5(path, cfg)
-        except Exception:
-            # fall back to standard video loader
-            pass
+        except Exception as exc:
+            # Some older local HDF5 caches contain only a fixed clip per video.
+            # Fall back to the original MP4 so the requested start_frame remains
+            # aligned with the label window.
+            if fallback_path is not None and fallback_path.exists():
+                log_key = str(path)
+                if log_key not in _HDF5_FALLBACK_LOGGED:
+                    LOGGER.warning("HDF5 decode failed for %s (%s); falling back to %s", path, exc, fallback_path)
+                    _HDF5_FALLBACK_LOGGED.add(log_key)
+                return load_clip(fallback_path, cfg)
+            raise
         return load_clip(path, cfg)
 
     def _choose_start_frame(self, events: Sequence[Sequence[float]]) -> int:
@@ -726,7 +735,8 @@ class BasePianoDataset(Dataset):
 
         # Choose a per-sample start frame (train: random around onsets)
         start_frame = self._choose_start_frame(raw.get("events", []))
-        frames = self._decode_clip(decode_path, start_frame=start_frame)
+        fallback_path = entry.video_path if decode_path != entry.video_path else None
+        frames = self._decode_clip(decode_path, start_frame=start_frame, fallback_path=fallback_path)
         source_hw = (int(frames.shape[-2]), int(frames.shape[-1])) if frames.ndim >= 4 else None
         if debug_extras is not None:
             debug_extras["decode"] = {

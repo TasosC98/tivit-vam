@@ -4,6 +4,10 @@ dataset:
   root_dir: data/PianoVAM_v1.0
   annotations_root: data/PianoVAM_v1.0
   label_format: midi
+  # PianoVAM TSV columns are onset, key_offset, frame_offset, note, velocity.
+  # For video transcription, train/evaluate release events against key_offset
+  # because it is the visible physical key release.
+  offset_column: key_offset
   label_targets:
     - pitch
     - onset

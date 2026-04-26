@@ -135,6 +135,38 @@ def _resolve_pitch_probe_threshold(metrics_cfg: Mapping[str, Any]) -> float:
     return threshold
 
 
+def _resolve_pitch_probe_top_k(metrics_cfg: Mapping[str, Any]) -> int:
+    if not isinstance(metrics_cfg, Mapping):
+        return 0
+    raw = None
+    probe_cfg = metrics_cfg.get("key_probe")
+    if isinstance(probe_cfg, Mapping):
+        raw = probe_cfg.get("top_k")
+    if raw is None:
+        patk_cfg = metrics_cfg.get("patk")
+        if isinstance(patk_cfg, Mapping):
+            raw = patk_cfg.get("top_k")
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return 0
+    return max(0, value)
+
+
+def _threshold_with_top_k(probs: torch.Tensor, threshold: float, top_k: int) -> torch.Tensor:
+    mask = probs >= float(threshold)
+    k = int(top_k)
+    if k <= 0 or probs.numel() == 0:
+        return mask
+    pitch_dim = int(probs.shape[-1])
+    if k >= pitch_dim:
+        return mask
+    top_idx = probs.topk(k, dim=-1).indices
+    top_mask = torch.zeros_like(mask, dtype=torch.bool)
+    top_mask.scatter_(-1, top_idx, True)
+    return mask & top_mask
+
+
 def _resolve_calibration_path(cfg: Mapping[str, Any]) -> Path | None:
     calibration_cfg = cfg.get("calibration", {}) if isinstance(cfg, Mapping) else {}
     if not isinstance(calibration_cfg, Mapping):
@@ -269,6 +301,7 @@ def evaluate(
         "target_active_sum": 0.0,
     }
     pitch_probe_threshold = _resolve_pitch_probe_threshold(metrics_cfg)
+    pitch_probe_top_k = _resolve_pitch_probe_top_k(metrics_cfg)
     postproc_debug = bool(
         (cfg_eval.get("logging", {}) if isinstance(cfg_eval, Mapping) else {}).get("postproc_debug", False)
     )
@@ -365,7 +398,12 @@ def evaluate(
                     if target_tensor.shape[1] != pred_tensor.shape[1]:
                         target_tensor = pool_roll_BT(target_tensor, pred_tensor.shape[1])
                     if target_tensor.shape[2] == pred_tensor.shape[2]:
-                        pred_mask = (torch.sigmoid(pred_tensor).detach() >= pitch_probe_threshold).cpu().numpy()
+                        pred_probs = torch.sigmoid(pred_tensor).detach()
+                        pred_mask = _threshold_with_top_k(
+                            pred_probs,
+                            pitch_probe_threshold,
+                            pitch_probe_top_k,
+                        ).cpu().numpy()
                         target_mask = (target_tensor > 0.5).detach().cpu().numpy()
                         batch_counts = key_state_counts(pred_mask, target_mask)
                         for key, value in batch_counts.items():
@@ -461,7 +499,7 @@ def evaluate(
                 frame_probs = smooth_time_probs(frame_probs, sigma=patk_cfg.frame_sigma, radius=patk_cfg.frame_radius)
 
                 onset_mask = clamp_probs(onset_probs, patk_cfg.threshold)
-                frame_mask = clamp_probs(frame_probs, patk_cfg.threshold)
+                frame_mask = clamp_probs(frame_probs, patk_cfg.threshold, top_k=patk_cfg.top_k)
 
                 onset_peaks = extract_onset_peaks(onset_probs, onset_mask)
                 pred_notes = build_notes_from_peaks(
@@ -561,6 +599,7 @@ def evaluate(
 
     if float(pitch_key_counts.get("frames", 0.0) or 0.0) > 0.0:
         metrics["pitch_probe_threshold"] = float(pitch_probe_threshold)
+        metrics["pitch_probe_top_k"] = float(pitch_probe_top_k)
         metrics.update(summarize_key_state_counts(pitch_key_counts))
 
     if patk_counts is not None:

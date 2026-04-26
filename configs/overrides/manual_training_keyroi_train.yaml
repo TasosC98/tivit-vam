@@ -1,0 +1,108 @@
+# Corrected PianoVAM training regime for video-based key/onset/offset learning.
+# Use on top of:
+#   - configs/default.yaml
+#   - configs/overrides/manual_training.yaml
+#
+# Main fixes versus the original manual run:
+#   - train on all available split entries, not the default 50-entry cap
+#   - use key_offset as the visible release target
+#   - enable keyboard registration / tile-key masks
+#   - keep event targets as single-frame spikes; train-only soft targets add
+#     the local tolerance without changing validation event counts
+
+dataset:
+  root_dir: /raid_storage/data_achatzigiannis/PianoVAM_v1.0
+  annotations_root: /raid_storage/data_achatzigiannis/PianoVAM_v1.0
+  hdf5_root: /raid_storage/data_achatzigiannis/PianoVAM_v1.0/HDF5
+  preprocessed_format: hdf5
+  offset_column: key_offset
+  split_train: train
+  split_val: valid
+  split_test: test
+  max_clips: null
+  frames: 96
+  batch_size: 1
+  num_workers: 0
+  frame_targets:
+    dilate_active_frames: 0
+    targets_sparse: true
+  registration:
+    enable: true
+    cache_path: reg_refined_pianovam.json
+    source: metadata
+    interp: bilinear
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/manual_training_keyroi
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/manual_training_keyroi/checkpoints
+  tensorboard: true
+  postproc_debug: false
+
+training:
+  epochs: 200
+  learning_rate: 3e-5
+  weight_decay: 0.01
+  amp: false
+  reset_head_bias: true
+  soft_targets:
+    enabled: true
+    apply_to:
+      onset: true
+      pitch: true
+      offset: false
+    onset_kernel: [0.5, 1.0, 0.5]
+    frame_kernel: [0.5, 1.0, 0.5]
+  metrics:
+    eval_mode: both
+    key_probe:
+      threshold: 0.5
+      top_k: 8
+    patk:
+      threshold: 0.5
+      top_k: 8
+    decoder:
+      onset:
+        open: 0.02
+        low_ratio: 0.60
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+      offset:
+        open: 0.02
+        low_ratio: 0.60
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+  loss:
+    head_weights:
+      pitch: 1.0
+      onset: 1.5
+      offset: 1.5
+      hand: 0.0
+      clef: 0.0
+    per_tile:
+      enabled: true
+      heads: [pitch, onset, offset]
+    heads:
+      onset:
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [4.0, 12.0]
+        prior_weight: 0.0
+      offset:
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [4.0, 12.0]
+        prior_weight: 0.0
+
+decoder:
+  global_fusion:
+    enabled: true
+    mode: masked_mean
+    cushion_keys: 2
+    apply_to: [pitch, onset, offset]
+
+train:
+  accumulate_steps: 4

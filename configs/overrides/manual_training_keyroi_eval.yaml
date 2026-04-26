@@ -1,0 +1,45 @@
+# Evaluation for manual_training_keyroi checkpoints.
+# Use after calibration so calibration.output_path points at the JSON to reuse.
+
+dataset:
+  split_val: valid
+  split_test: test
+  batch_size: 1
+  num_workers: 0
+
+training:
+  metrics:
+    eval_mode: both
+    key_probe:
+      threshold: 0.5
+      top_k: 8
+    patk:
+      threshold: 0.5
+      top_k: 8
+      fps: 30.0
+      onset_tolerance_ms: 100.0
+      onset_sigma: 0.2
+      onset_radius: 8
+      frame_sigma: 0.8
+      frame_radius: 4
+      ignore_tail: 4
+      offset_ratio: 0.2
+      offset_min_tolerance: 0.05
+    decoder:
+      onset:
+        open: 0.02
+        low_ratio: 0.60
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+      offset:
+        open: 0.02
+        low_ratio: 0.60
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+
+calibration:
+  output_path: calibration/keyroi_manual_training.json

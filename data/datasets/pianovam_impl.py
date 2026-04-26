@@ -98,6 +98,40 @@ def _load_metadata(root: Path) -> Dict[str, Dict[str, Any]]:
     return table
 
 
+def _normalise_offset_column(value: Any) -> str:
+    """Return the PianoVAM TSV offset column to use for note release targets."""
+
+    name = str(value or "key_offset").strip().lower()
+    if name in {"frame", "frame_offset", "sound_offset", "pedal_offset"}:
+        return "frame_offset"
+    return "key_offset"
+
+
+def _parse_event_row(parts: Sequence[Any], *, offset_column: str = "key_offset") -> tuple[float, float, int]:
+    """Parse PianoVAM event rows.
+
+    Five-column TSV rows are:
+      onset, key_offset, frame_offset, note, velocity
+
+    For video transcription we default to key_offset because it corresponds to
+    the physical key release visible in the video.
+    """
+
+    if len(parts) >= 5:
+        offset_idx = 2 if _normalise_offset_column(offset_column) == "frame_offset" else 1
+        pitch_idx = 3
+    elif len(parts) >= 3:
+        offset_idx = 1
+        pitch_idx = 2
+    else:
+        raise ValueError("event row must have at least three columns")
+
+    onset = float(parts[0])
+    offset = float(parts[offset_idx])
+    pitch = int(round(float(parts[pitch_idx])))
+    return onset, offset, pitch
+
+
 class PianoVAMDataset(BasePianoDataset):
     """PianoVAM dataset using shared decoding/target logic."""
 
@@ -279,6 +313,7 @@ class PianoVAMDataset(BasePianoDataset):
 
         events: list[Any] = []
         hand_meta: dict[str, Any] = {}
+        offset_column = _normalise_offset_column(self.dataset_cfg.get("offset_column", "key_offset"))
 
         # 1) Try labels from HDF5 video file (if present)
         if has_hdf5_video:
@@ -290,7 +325,7 @@ class PianoVAMDataset(BasePianoDataset):
                         arr = hf["labels_ts"][:]
                         for row in arr:
                             try:
-                                events.append((float(row[0]), float(row[1]), int(row[2])))
+                                events.append(_parse_event_row(list(row), offset_column=offset_column))
                             except Exception:
                                 continue
                     elif "label_raw" in hf:
@@ -304,7 +339,7 @@ class PianoVAMDataset(BasePianoDataset):
                             if len(parts) < 3:
                                 continue
                             try:
-                                onset, offset, pitch = float(parts[0]), float(parts[1]), int(parts[2])
+                                onset, offset, pitch = _parse_event_row(parts, offset_column=offset_column)
                             except Exception:
                                 continue
                             events.append((onset, offset, pitch))
@@ -341,11 +376,7 @@ class PianoVAMDataset(BasePianoDataset):
                             if len(parts) < 3:
                                 continue
                             try:
-                                onset = float(parts[0])
-                                offset = float(parts[1])
-                                # PianoVAM TSVs may be 5-column (pitch at index 3)
-                                pitch_raw = parts[3] if len(parts) >= 5 else parts[2]
-                                pitch = int(round(float(pitch_raw)))
+                                onset, offset, pitch = _parse_event_row(parts, offset_column=offset_column)
                             except (TypeError, ValueError):
                                 continue
                             events.append((onset, offset, pitch))

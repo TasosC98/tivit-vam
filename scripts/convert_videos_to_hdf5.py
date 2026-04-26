@@ -1,4 +1,10 @@
-"""Convert a single video (or many) to per-video HDF5 files for training.
+"""Convert one fixed video clip to HDF5.
+
+Important:
+    This script writes a fixed clip, not a full-video cache. The resulting HDF5
+    is useful for smoke tests/debugging, but it is not suitable for normal
+    PianoVAM training with random `start_frame` sampling. For training, either
+    decode the MP4 directly or build a full-video/clip-indexed cache format.
 
 Usage (single video smoke test):
     python scripts/convert_videos_to_hdf5.py \
@@ -9,7 +15,8 @@ Usage (single video smoke test):
 This script uses the existing `tivit.data.decode.video_reader.load_clip`
 to decode frames (so decode logic is shared) and stores frames as uint8
 in dataset `frames` with shape (T,H,W,C). It also stores attributes
-`fps` and `original_video_path` and an optional `label_raw` dataset.
+`fps`, `original_video_path`, `cache_kind=fixed_clip`, and an optional
+`label_raw` dataset.
 """
 
 from __future__ import annotations
@@ -57,9 +64,18 @@ def _get_fps(path: Path) -> float | None:
             return None
 
 
-def convert_one(video_path: Path, out_dir: Path, frames: int, stride: int, resize: tuple[int, int], channels: int, label_path: Path | None):
+def convert_one(
+    video_path: Path,
+    out_dir: Path,
+    frames: int,
+    stride: int,
+    resize: tuple[int, int],
+    channels: int,
+    label_path: Path | None,
+    start_frame: int,
+):
     out_dir.mkdir(parents=True, exist_ok=True)
-    cfg = VideoReaderConfig(frames=frames, stride=stride, resize_hw=resize, channels=channels)
+    cfg = VideoReaderConfig(frames=frames, stride=stride, resize_hw=resize, channels=channels, start_frame=start_frame)
     x = load_clip(video_path, cfg)  # T,C,H,W float32 [0,1]
     # convert to uint8 and permute to T,H,W,C
     try:
@@ -79,6 +95,10 @@ def convert_one(video_path: Path, out_dir: Path, frames: int, stride: int, resiz
         if fps is not None:
             hf.attrs["fps"] = float(fps)
         hf.attrs["original_video_path"] = str(video_path)
+        hf.attrs["cache_kind"] = "fixed_clip"
+        hf.attrs["clip_start_frame"] = int(start_frame)
+        hf.attrs["clip_frames"] = int(frames)
+        hf.attrs["clip_stride"] = int(stride)
         if label_path is not None and label_path.exists():
             try:
                 with open(label_path, "rb") as f:
@@ -100,6 +120,7 @@ def main(argv: list[str] | None = None):
     p.add_argument("--resize", nargs=2, type=int, metavar=("H", "W"), default=[0, 0])
     p.add_argument("--channels", type=int, default=3)
     p.add_argument("--label", type=str, default=None)
+    p.add_argument("--start-frame", type=int, default=0, help="Fixed clip start frame written to the HDF5 file")
     args = p.parse_args(argv)
 
     video_path = Path(args.video)
@@ -108,7 +129,16 @@ def main(argv: list[str] | None = None):
         raise SystemExit(1)
     out_dir = Path(args.out_dir)
     label_path = Path(args.label) if args.label else None
-    convert_one(video_path, out_dir, args.frames, args.stride, (args.resize[0], args.resize[1]), args.channels, label_path)
+    convert_one(
+        video_path,
+        out_dir,
+        args.frames,
+        args.stride,
+        (args.resize[0], args.resize[1]),
+        args.channels,
+        label_path,
+        int(args.start_frame),
+    )
 
 
 if __name__ == "__main__":

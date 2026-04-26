@@ -1,0 +1,41 @@
+# Calibration for manual_training_keyroi checkpoints.
+# Use on top of:
+#   - configs/default.yaml
+#   - configs/overrides/manual_training_keyroi_train.yaml
+
+dataset:
+  split_val: valid
+  split_test: test
+  batch_size: 1
+  num_workers: 0
+
+training:
+  metrics:
+    eval_mode: both
+    prob_threshold_onset: 0.12
+    prob_threshold_offset: 0.12
+    decoder:
+      onset:
+        open: 0.12
+        low_ratio: 0.60
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+      offset:
+        open: 0.12
+        low_ratio: 0.60
+        min_on: 1
+        min_off: 1
+        merge_gap: 0
+        median: 1
+
+calibration:
+  method: threshold_sweep
+  output_path: calibration/keyroi_manual_training.json
+  threshold_priors_path: null
+  sweep:
+    delta: 0.01
+    steps: 49
+    min_prob: 0.001
+    max_prob: 0.60

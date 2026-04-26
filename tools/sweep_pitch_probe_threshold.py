@@ -31,6 +31,12 @@ def _parse_args() -> argparse.Namespace:
     ap.add_argument("--stop", type=float, default=0.50, help="End of threshold range when --threshold is omitted")
     ap.add_argument("--step", type=float, default=0.01, help="Step size for threshold range when --threshold is omitted")
     ap.add_argument("--top-k", type=int, default=10, help="How many rows to print after ranking")
+    ap.add_argument(
+        "--pitch-top-k",
+        type=int,
+        default=None,
+        help="Optional per-frame top-k cap for key_probe/patk pitch masks",
+    )
     ap.add_argument("--work-dir", default=None, help="Optional output directory for per-threshold logs and summaries")
     ap.add_argument("--verbose", choices=["quiet", "info", "debug"], default="info")
     ap.add_argument("--max-batches", dest="max_batches", type=int)
@@ -75,19 +81,27 @@ def metric_value(metrics: Mapping[str, Any], key: str) -> float:
         return float("-inf")
 
 
-def _write_override(path: Path, *, log_dir: Path, threshold: float, calibration_path: str | None) -> None:
+def _write_override(
+    path: Path,
+    *,
+    log_dir: Path,
+    threshold: float,
+    pitch_top_k: int | None,
+    calibration_path: str | None,
+) -> None:
+    key_probe = {"threshold": float(threshold)}
+    patk = {"threshold": float(threshold)}
+    if pitch_top_k is not None:
+        key_probe["top_k"] = max(0, int(pitch_top_k))
+        patk["top_k"] = max(0, int(pitch_top_k))
     payload: dict[str, object] = {
         "logging": {
             "log_dir": log_dir.as_posix(),
         },
         "training": {
             "metrics": {
-                "key_probe": {
-                    "threshold": float(threshold),
-                },
-                "patk": {
-                    "threshold": float(threshold),
-                },
+                "key_probe": key_probe,
+                "patk": patk,
             },
         },
     }
@@ -115,6 +129,7 @@ def _flatten_record(record: Mapping[str, Any]) -> dict[str, Any]:
         "pitch_active_precision": metrics.get("pitch_active_precision"),
         "pitch_active_recall": metrics.get("pitch_active_recall"),
         "pitch_active_f1": metrics.get("pitch_active_f1"),
+        "pitch_probe_top_k": metrics.get("pitch_probe_top_k"),
         "pitch_inactive_specificity": metrics.get("pitch_inactive_specificity"),
         "pitch_exact_frame_match": metrics.get("pitch_exact_frame_match"),
         "pitch_frame_jaccard": metrics.get("pitch_frame_jaccard"),
@@ -171,6 +186,7 @@ def main() -> None:
                 override_path,
                 log_dir=threshold_dir,
                 threshold=threshold,
+                pitch_top_k=args.pitch_top_k,
                 calibration_path=args.calibration_path,
             )
 

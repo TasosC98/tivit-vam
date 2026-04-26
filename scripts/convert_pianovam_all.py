@@ -12,6 +12,7 @@ def main():
     p.add_argument("--stride", type=int, default=1)
     p.add_argument("--resize-h", type=int, default=180)
     p.add_argument("--resize-w", type=int, default=1536)
+    p.add_argument("--start-frame", type=int, default=0, help="Fixed clip start frame to cache")
     p.add_argument("--max", type=int, default=0, help="convert only first N videos (0=all)")
     args = p.parse_args()
 
@@ -44,6 +45,7 @@ def main():
             "--frames", str(args.frames),
             "--stride", str(args.stride),
             "--resize", str(args.resize_h), str(args.resize_w),
+            "--start-frame", str(args.start_frame),
         ]
         print("RUN:", " ".join(cmd))
         r = subprocess.run(cmd)
