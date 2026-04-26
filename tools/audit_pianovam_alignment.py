@@ -43,6 +43,30 @@ def _safe_int(value: Any) -> int | None:
         return None
 
 
+def _geometry_signature(geometry: Mapping[str, Any] | None) -> str | None:
+    """Stable hash of key_bounds_px (rounded) so two audits can detect whether
+    the per-video geometry actually changed between runs."""
+
+    if not isinstance(geometry, Mapping):
+        return None
+    bounds = geometry.get("key_bounds_px")
+    if not isinstance(bounds, Sequence):
+        return None
+    import hashlib
+    parts: list[str] = []
+    for pair in bounds:
+        if not isinstance(pair, Sequence) or len(pair) < 2:
+            continue
+        l = _safe_float(pair[0])
+        r = _safe_float(pair[1])
+        if l is None or r is None:
+            continue
+        parts.append(f"{l:.3f},{r:.3f}")
+    if not parts:
+        return None
+    return hashlib.sha1("|".join(parts).encode("utf-8")).hexdigest()[:16]
+
+
 def _video_to_rgb(video: torch.Tensor, *, frame_index: int, mean: Sequence[float], std: Sequence[float]) -> Any:
     import numpy as np
 
@@ -264,12 +288,22 @@ def _audit_split(cfg: Mapping[str, Any], split: str, out_dir: Path, *, max_video
                     "registration_status": registration.get("status") if isinstance(registration, Mapping) else None,
                     "registration_err_before": registration.get("err_before") if isinstance(registration, Mapping) else None,
                     "registration_err_after": registration.get("err_after") if isinstance(registration, Mapping) else None,
+                    "registration_err_white": registration.get("err_white") if isinstance(registration, Mapping) else None,
+                    "registration_err_black": registration.get("err_black") if isinstance(registration, Mapping) else None,
                     "onset_target_count": _target_count(sample, "onset"),
                     "offset_target_count": _target_count(sample, "offset"),
                     "pitch_target_count": _target_count(sample, "pitch"),
                 }
             )
             row.update(geom_info)
+            err_after = _safe_float(registration.get("err_after")) if isinstance(registration, Mapping) else None
+            white_mean = _safe_float(geom_info.get("white_width_mean"))
+            row["normalized_err_after"] = (
+                float(err_after) / float(white_mean)
+                if (err_after is not None and white_mean is not None and white_mean > 0.0)
+                else None
+            )
+            row["geometry_signature"] = _geometry_signature(geometry)
         except Exception as exc:
             row.update({"status": "failed", "error": str(exc)})
         rows.append(row)
