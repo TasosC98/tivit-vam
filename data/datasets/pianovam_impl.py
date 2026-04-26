@@ -348,7 +348,9 @@ class PianoVAMDataset(BasePianoDataset):
                 pass
 
         # 2) External label file (TSV/MIDI/etc.)
-        if has_label_file:
+        # Skip when HDF5 already provided events to avoid double-counting onsets
+        # (HDF5 + TSV would otherwise concatenate, doubling every event).
+        if has_label_file and not events:
             suffix = entry.label_path.suffix.lower()
 
             if suffix in {".mid", ".midi"}:

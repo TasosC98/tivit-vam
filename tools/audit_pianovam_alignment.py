@@ -77,7 +77,15 @@ def _draw_key_overlay(image_rgb: Any, geometry: Mapping[str, Any] | None, *, not
     import numpy as np
 
     overlay = image_rgb.copy()
-    info: dict[str, Any] = {"geometry_present": False, "key_bounds_count": 0}
+    info: dict[str, Any] = {
+        "geometry_present": False,
+        "key_bounds_count": 0,
+        "white_width_min": None,
+        "white_width_max": None,
+        "white_width_mean": None,
+        "canonical_white_width": None,
+        "bounds_look_canonical": None,
+    }
     if not isinstance(geometry, Mapping):
         return overlay, info
     key_bounds = geometry.get("key_bounds_px")
@@ -92,6 +100,27 @@ def _draw_key_overlay(image_rgb: Any, geometry: Mapping[str, Any] | None, *, not
     scale_x = float(w) / target_w
     info["geometry_present"] = True
     info["key_bounds_count"] = len(key_bounds)
+
+    canonical_white = float(target_w) / 52.0
+    info["canonical_white_width"] = canonical_white
+    white_widths: list[float] = []
+    for idx, pair in enumerate(key_bounds):
+        if not isinstance(pair, Sequence) or len(pair) < 2:
+            continue
+        midi = int(note_min) + idx
+        if not _is_black_key(midi):
+            l = _safe_float(pair[0]) or 0.0
+            r = _safe_float(pair[1]) or 0.0
+            white_widths.append(float(r - l))
+    if white_widths:
+        wmin, wmax = float(min(white_widths)), float(max(white_widths))
+        wmean = float(sum(white_widths) / len(white_widths))
+        info["white_width_min"] = wmin
+        info["white_width_max"] = wmax
+        info["white_width_mean"] = wmean
+        info["bounds_look_canonical"] = bool(
+            wmin >= 0.6 * canonical_white and wmax <= 1.4 * canonical_white
+        )
 
     blended = overlay.copy()
     for idx, bound in enumerate(key_bounds):
@@ -294,9 +323,34 @@ def main() -> None:
         for row in rows
         if row.get("metadata_record_time_matches_video") is False or row.get("metadata_split_matches_request") is False
     ]
+    bounds_evaluated = [row for row in rows if row.get("bounds_look_canonical") is not None]
+    bounds_canonical = [row for row in bounds_evaluated if row.get("bounds_look_canonical")]
+    bounds_bad = [row for row in bounds_evaluated if row.get("bounds_look_canonical") is False]
+
     print(f"\nWrote audit to {out_dir}")
     print(f"Rows: {len(rows)} failed={len(failed)} missing_geometry={len(missing_geometry)} metadata_bad={len(metadata_bad)}")
-    if args.strict and (failed or missing_geometry or metadata_bad):
+    if bounds_evaluated:
+        pct = 100.0 * len(bounds_canonical) / max(len(bounds_evaluated), 1)
+        print(
+            f"Key-bounds canonical alignment: {len(bounds_canonical)}/{len(bounds_evaluated)} videos OK"
+            f" ({pct:.1f}%) — bad={len(bounds_bad)}"
+        )
+        if bounds_bad:
+            print("First 10 mis-aligned videos:")
+            for row in bounds_bad[:10]:
+                print(
+                    "  split={split} idx={idx} video={vid} white_w[min/mean/max]="
+                    "{wmin:.2f}/{wmean:.2f}/{wmax:.2f} (canonical={canon:.2f})".format(
+                        split=row.get("split"),
+                        idx=row.get("index"),
+                        vid=row.get("video_id"),
+                        wmin=float(row.get("white_width_min") or 0.0),
+                        wmean=float(row.get("white_width_mean") or 0.0),
+                        wmax=float(row.get("white_width_max") or 0.0),
+                        canon=float(row.get("canonical_white_width") or 0.0),
+                    )
+                )
+    if args.strict and (failed or missing_geometry or metadata_bad or bounds_bad):
         raise SystemExit(1)
 
 

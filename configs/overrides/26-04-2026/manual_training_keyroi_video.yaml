@@ -1,0 +1,58 @@
+# 2026-04-26 fix overlay
+#
+# Stack on top of:
+#   - configs/default.yaml
+#   - configs/overrides/manual_training.yaml
+#   - configs/overrides/manual_training_keyroi_train.yaml
+#   - configs/overrides/26-04-2026/manual_training_keyroi_video.yaml   <-- THIS FILE
+#
+# Two fixes:
+#   1) Disable HDF5 entirely. The new server is fast enough to decode MP4s
+#      directly. This also eliminates two HDF5-induced sync bugs:
+#        - duplicate event loading (HDF5 labels_ts + TSV both appended)
+#        - older HDF5 caches that contain a fixed clip per video, breaking
+#          start_frame alignment with TSV onsets.
+#   2) Force a fresh registration cache so the canonical key_bounds_px fix
+#      applied via tools/rebuild_canonical_geometry.py is loaded. Run that
+#      tool BEFORE training (see comment block at the bottom).
+
+dataset:
+  preprocessed_format: null      # disable HDF5; decode MP4 directly
+  hdf5_root: null                # belt-and-braces: prevents entry.hdf5_path lookup
+  registration:
+    enable: true
+    cache_path: reg_refined_pianovam.json
+    source: metadata
+    interp: bilinear
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_26-04-2026
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_26-04-2026/checkpoints
+  tensorboard: true
+
+# Setup steps before training (run once):
+#
+#   # 1) Repair the corrupted key_bounds_px in the registration cache.
+#   #    Backs up the original to reg_refined_pianovam.json.bak.
+#   PYTHONPATH=. python tools/rebuild_canonical_geometry.py \
+#     --cache reg_refined_pianovam.json
+#
+#   # 2) Re-run the audit to confirm key/black-key boxes line up with the
+#   #    actual rectified frame.
+#   PYTHONPATH=. python tools/audit_pianovam_alignment.py \
+#     --config configs/default.yaml \
+#     --config configs/overrides/manual_training.yaml \
+#     --config configs/overrides/manual_training_keyroi_train.yaml \
+#     --config configs/overrides/26-04-2026/manual_training_keyroi_video.yaml \
+#     --splits train valid test \
+#     --out-dir /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_26-04-2026/audit_after_fix \
+#     --max-videos 0
+#
+# Training:
+#
+#   PYTHONPATH=. python -m tivit.pipelines.train_single \
+#     --config configs/default.yaml \
+#     --config configs/overrides/manual_training.yaml \
+#     --config configs/overrides/manual_training_keyroi_train.yaml \
+#     --config configs/overrides/26-04-2026/manual_training_keyroi_video.yaml \
+#     --verbose info

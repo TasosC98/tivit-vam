@@ -150,13 +150,52 @@ def _key_bounds_from_white_edges(edges: np.ndarray, width: float) -> Optional[Li
     return bounds
 
 
+def _white_bounds_look_canonical(
+    key_bounds: Sequence[Sequence[float]], width: float, *, tolerance: float = 0.4
+) -> bool:
+    """Sanity check: white-key widths should match canonical (width/52) within tolerance.
+
+    The rectified canvas is canonical after homography + x_warp, so per-image
+    white-key widths should never deviate strongly from width/52. When they do,
+    it means the input edges were corrupted and the resulting bounds will not
+    line up with the rectified frame.
+    """
+
+    if not key_bounds or width <= 0.0:
+        return False
+    canonical_white = float(width) / 52.0
+    if canonical_white <= 0.0:
+        return False
+    lo = (1.0 - float(tolerance)) * canonical_white
+    hi = (1.0 + float(tolerance)) * canonical_white
+    for idx, pair in enumerate(key_bounds):
+        if len(pair) < 2:
+            return False
+        midi = _MIDI_LOW + idx
+        if not _midi_is_white(midi):
+            continue
+        w = float(pair[1]) - float(pair[0])
+        if not math.isfinite(w):
+            return False
+        if w < lo or w > hi:
+            return False
+    return True
+
+
 def _build_geometry_metadata_from_edges(edges: np.ndarray, width: float, canonical_hw: Sequence[int]) -> Optional[Dict[str, Any]]:
     if len(canonical_hw) < 2:
         return None
     canon_pair = (int(canonical_hw[0]), int(canonical_hw[1]))
     key_bounds = _key_bounds_from_white_edges(edges, width)
-    if key_bounds is None:
-        return None
+    if key_bounds is None or not _white_bounds_look_canonical(key_bounds, width):
+        # The rectified frame is canonical/uniform after homography + x_warp.
+        # If the edge-derived bounds are missing or implausible (e.g. due to
+        # spurious detections in white_proj_x), fall back to canonical
+        # evenly-spaced bounds — they match the rectified canvas exactly.
+        canonical_edges = _canonical_white_edges(float(width))
+        key_bounds = _key_bounds_from_white_edges(canonical_edges, float(width))
+        if key_bounds is None:
+            return None
     tile_bounds = [
         (float(lo) * width, float(hi) * width) for lo, hi in _uniform_bounds(_DEFAULT_META_TILES)
     ]
@@ -1225,8 +1264,25 @@ class RegistrationRefiner:
                     original_hw,
                     self.canonical_hw,
                 )
-            if result.geometry_meta is None or "tile_bounds_px" not in result.geometry_meta:
+            needs_rebuild = (
+                result.geometry_meta is None
+                or "tile_bounds_px" not in result.geometry_meta
+                or not _white_bounds_look_canonical(
+                    result.geometry_meta.get("key_bounds_px") or [],
+                    float(result.geometry_meta.get("rectified_width") or result.target_hw[1]),
+                )
+            )
+            if needs_rebuild:
                 rebuilt = _reconstruct_geometry_from_result(result)
+                if rebuilt is None:
+                    # Force a canonical-uniform geometry so per-image bounds
+                    # always match the rectified canvas, even if warp_ctrl
+                    # was unable to produce edges.
+                    width = float(result.target_hw[1])
+                    canonical_edges = _canonical_white_edges(width)
+                    rebuilt = _build_geometry_metadata_from_edges(
+                        canonical_edges, width, canonical_hw=tuple(result.target_hw)
+                    )
                 if rebuilt is not None:
                     result.geometry_meta = rebuilt
                     metadata_updated = True
