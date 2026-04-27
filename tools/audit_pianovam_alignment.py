@@ -277,6 +277,26 @@ def _audit_split(cfg: Mapping[str, Any], split: str, out_dir: Path, *, max_video
             debug = sample.get("_debug_extras", {})
             registration = debug.get("registration", {}) if isinstance(debug, Mapping) else {}
             geometry = registration.get("cache_geometry") if isinstance(registration, Mapping) else None
+            # Prefer the per-video calibrated geometry (Phase 2.5) when present.
+            # This makes the audit overlay reflect what the dataset will train on
+            # rather than the legacy registration cache.
+            geom_idx = getattr(ds, "geometry_index", None)
+            calibrated_payload = None
+            if geom_idx is not None:
+                geom_entry = geom_idx.get(split, entry.video_id)
+                if geom_entry is not None:
+                    calibrated_payload = dict(geom_entry.payload)
+                    bounds = []
+                    polys = calibrated_payload.get("key_polygons_rectified") or []
+                    for poly in polys:
+                        try:
+                            xs = [float(p[0]) for p in poly]
+                            bounds.append([min(xs), max(xs)])
+                        except Exception:
+                            bounds.append([0.0, 0.0])
+                    calibrated_payload["key_bounds_px"] = bounds
+                    calibrated_payload.setdefault("rectified_width", float(calibrated_payload.get("target_hw", [0, 0])[1]))
+                    geometry = calibrated_payload
             image = _video_to_rgb(sample["video"], frame_index=frame_index, mean=ds.norm_mean, std=ds.norm_std)
             overlay, geom_info = _draw_key_overlay(image, geometry, note_min=note_min)
             overlay_path = split_dir / f"{idx:05d}_{entry.video_id}_keys.png"

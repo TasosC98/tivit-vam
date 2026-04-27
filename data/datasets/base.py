@@ -35,6 +35,7 @@ from ..roi.keyboard_roi import (
     resolve_registration_cache_path,
     _apply_crop_np,
 )
+from ..roi.geometry_index import GeometryIndex
 from ..roi.tiling import tile_vertical_token_aligned
 from ..targets.frame_targets import (
     FrameTargetResult,
@@ -158,6 +159,35 @@ class BasePianoDataset(Dataset):
         root = self._resolve_root(self.dataset_cfg.get("root_dir"))
         manifest = self._resolve_manifest()
         entries = self._list_entries(root, split, manifest)
+
+        # Apply per-video calibration gate when configured. The geometry root
+        # points at `key_geometry/` produced by tools/recalibrate_all.py.
+        # In TRAIN, exclude videos whose calibration_status is not in
+        # {ok, manual_fixed}. In VAL/TEST, also accept accepted_loose.
+        # Excluded videos are appended to excluded_videos.csv at the project
+        # root for inspection.
+        geom_root = self.dataset_cfg.get("key_geometry_root")
+        self.geometry_index = GeometryIndex(Path(geom_root)) if geom_root else GeometryIndex(None)
+        if self.geometry_index.is_active():
+            excluded_log = (
+                Path(self.full_cfg.get("logging", {}).get("log_dir", ".")).expanduser()
+                / "excluded_videos.csv"
+                if isinstance(self.full_cfg, Mapping)
+                else None
+            )
+            kept, excluded = self.geometry_index.filter_entries(
+                entries, split=str(split), excluded_log=excluded_log
+            )
+            if excluded:
+                LOGGER.warning(
+                    "geometry_gate: split=%s excluded=%d kept=%d (logged to %s)",
+                    split,
+                    len(excluded),
+                    len(kept),
+                    excluded_log,
+                )
+            entries = kept
+
         max_clips = self.dataset_cfg.get("max_clips")
         if max_clips is not None and len(entries) > int(max_clips):
             entries = entries[: int(max_clips)]
@@ -311,6 +341,50 @@ class BasePianoDataset(Dataset):
             return gray
         return gray.repeat(1, 3, 1, 1)
 
+    def _apply_calibrated_homography(
+        self,
+        frames: torch.Tensor,
+        payload: Mapping[str, Any],
+    ) -> torch.Tensor:
+        """Warp frames using a homography produced by the per-video calibrator.
+
+        `frames` is (T, C, H_src, W_src) AFTER the metadata crop has already
+        been applied. The calibrator stored its homography in source-cropped
+        coordinates so we can apply it directly. Output is (T, C, H_t, W_t)
+        where (H_t, W_t) is `payload['target_hw']`.
+        """
+
+        H_list = payload.get("homography")
+        target_hw = payload.get("target_hw")
+        if not (isinstance(H_list, (list, tuple)) and len(H_list) == 9):
+            return frames
+        if not (isinstance(target_hw, (list, tuple)) and len(target_hw) >= 2):
+            return frames
+        h_t, w_t = int(target_hw[0]), int(target_hw[1])
+        if h_t <= 0 or w_t <= 0:
+            return frames
+        H = np.asarray(H_list, dtype=np.float32).reshape(3, 3)
+        try:
+            H_inv = np.linalg.inv(H).astype(np.float32)
+        except np.linalg.LinAlgError:
+            return frames
+        h_src, w_src = int(frames.shape[-2]), int(frames.shape[-1])
+        # Build the inverse-warp grid: for each (y, x) in target, find (xs, ys) in source.
+        ys = np.linspace(0.0, float(h_t - 1), h_t, dtype=np.float32)
+        xs = np.linspace(0.0, float(w_t - 1), w_t, dtype=np.float32)
+        xv, yv = np.meshgrid(xs, ys)
+        ones = np.ones_like(xv)
+        coords = np.stack([xv, yv, ones], axis=-1).reshape(-1, 3).T
+        mapped = H_inv @ coords
+        denom = np.maximum(mapped[2], 1e-6)
+        x_src = (mapped[0] / denom).reshape(h_t, w_t)
+        y_src = (mapped[1] / denom).reshape(h_t, w_t)
+        x_norm = ((x_src + 0.5) / max(float(w_src), 1.0)) * 2.0 - 1.0
+        y_norm = ((y_src + 0.5) / max(float(h_src), 1.0)) * 2.0 - 1.0
+        grid = torch.from_numpy(np.stack([np.clip(x_norm, -2.0, 2.0), np.clip(y_norm, -2.0, 2.0)], axis=-1).astype(np.float32))
+        grid = grid.unsqueeze(0).expand(frames.shape[0], -1, -1, -1).to(frames.device)
+        return F.grid_sample(frames, grid, mode="bilinear", padding_mode="zeros", align_corners=False)
+
     def _apply_registration(
         self,
         frames: torch.Tensor,
@@ -332,9 +406,57 @@ class BasePianoDataset(Dataset):
                 frames = torch.from_numpy(cropped).permute(0, 3, 1, 2)
         except Exception:
             pass
+
+        # Prefer the per-video calibrated homography (key_geometry/) when
+        # present; fall back to the legacy RegistrationRefiner only if no
+        # calibrated geometry exists for this video.
+        calibrated_used = False
+        geom_idx = getattr(self, "geometry_index", None)
+        if geom_idx is not None and geom_idx.is_active():
+            geom_entry = geom_idx.get(self.split, entry.video_id)
+            if geom_entry is not None and geom_entry.calibration_status in {"ok", "manual_fixed", "accepted_loose"}:
+                try:
+                    frames = self._apply_calibrated_homography(frames, geom_entry.payload)
+                    calibrated_used = True
+                    if debug_meta is not None:
+                        debug_meta["registration"] = {
+                            "status": geom_entry.calibration_status,
+                            "err_before": float(geom_entry.payload.get("residual_median_px") or 0.0),
+                            "err_after": float(geom_entry.payload.get("residual_median_px") or 0.0),
+                            "err_white": 0.0,
+                            "err_black": 0.0,
+                            "frames": int(frames.shape[0]) if frames.ndim >= 4 else 0,
+                            "source_hw": list(geom_entry.payload.get("source_hw") or [0, 0]),
+                            "target_hw": list(geom_entry.payload.get("target_hw") or [0, 0]),
+                            "cache_geometry": {
+                                "rectified_width": float(geom_entry.payload.get("target_hw", [0, 0])[1]),
+                                "target_hw": list(geom_entry.payload.get("target_hw") or [0, 0]),
+                                "key_polygons_rectified": geom_entry.payload.get("key_polygons_rectified"),
+                                "key_bounds_px": [
+                                    [
+                                        min(float(p[0]) for p in poly),
+                                        max(float(p[0]) for p in poly),
+                                    ]
+                                    for poly in (geom_entry.payload.get("key_polygons_rectified") or [])
+                                ],
+                                "tile_bounds_px": [
+                                    [i * float(geom_entry.payload.get("target_hw", [0, 0])[1]) / 3.0,
+                                     (i + 1) * float(geom_entry.payload.get("target_hw", [0, 0])[1]) / 3.0]
+                                    for i in range(3)
+                                ],
+                                "calibration_source": "key_geometry",
+                            },
+                        }
+                except Exception as exc:
+                    LOGGER.warning(
+                        "calibrated homography failed for %s (%s); falling back to legacy refiner",
+                        entry.video_id,
+                        exc,
+                    )
+                    calibrated_used = False
         try:
             # Run registration refiner to warp frames to canonical HW when enabled.
-            if self.registration_enabled and self.registration_refiner is not None:
+            if not calibrated_used and self.registration_enabled and self.registration_refiner is not None:
                 debug_context = {"split": self.split, "dataset_index": dataset_index}
                 transformed = self.registration_refiner.transform_clip(
                     frames,
