@@ -6,12 +6,17 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 from pathlib import Path
 import sys
 from typing import Any, Mapping, Sequence
 
 import torch
 
+# Audit is read-only: it should always see ALL videos so we can measure the
+# state of the geometry, including videos that the gate would exclude from
+# training. Disable the gate before importing the dataset package.
+os.environ.setdefault("TIVIT_GEOMETRY_GATE_DISABLED", "1")
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:

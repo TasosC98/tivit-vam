@@ -166,9 +166,22 @@ class BasePianoDataset(Dataset):
         # {ok, manual_fixed}. In VAL/TEST, also accept accepted_loose.
         # Excluded videos are appended to excluded_videos.csv at the project
         # root for inspection.
+        #
+        # The gate is bypassed when:
+        #   - TIVIT_GEOMETRY_GATE_DISABLED=1 in the environment (used by
+        #     tools that populate the geometry root, like recalibrate_all.py).
+        #   - The geometry root contains no JSONs for this split yet
+        #     (avoids excluding everything before the calibrator has run).
         geom_root = self.dataset_cfg.get("key_geometry_root")
+        gate_disabled = os.environ.get("TIVIT_GEOMETRY_GATE_DISABLED", "0") == "1"
         self.geometry_index = GeometryIndex(Path(geom_root)) if geom_root else GeometryIndex(None)
-        if self.geometry_index.is_active():
+        split_geom_dir = (Path(geom_root) / str(split)) if geom_root else None
+        split_has_jsons = bool(
+            split_geom_dir is not None
+            and split_geom_dir.is_dir()
+            and any(split_geom_dir.glob("*.json"))
+        )
+        if not gate_disabled and self.geometry_index.is_active() and split_has_jsons:
             excluded_log = (
                 Path(self.full_cfg.get("logging", {}).get("log_dir", ".")).expanduser()
                 / "excluded_videos.csv"
@@ -187,6 +200,18 @@ class BasePianoDataset(Dataset):
                     excluded_log,
                 )
             entries = kept
+        elif gate_disabled and self.geometry_index.is_active():
+            LOGGER.info(
+                "geometry_gate: split=%s DISABLED via TIVIT_GEOMETRY_GATE_DISABLED",
+                split,
+            )
+        elif geom_root and not split_has_jsons:
+            LOGGER.warning(
+                "geometry_gate: split=%s no JSONs under %s yet — gate not applied. "
+                "Run tools/recalibrate_all.py first.",
+                split,
+                split_geom_dir,
+            )
 
         max_clips = self.dataset_cfg.get("max_clips")
         if max_clips is not None and len(entries) > int(max_clips):

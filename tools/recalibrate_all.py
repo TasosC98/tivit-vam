@@ -30,11 +30,17 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import sys
 import time
 import traceback
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Tuple
+
+# CRITICAL: This tool populates the geometry root, so it must build dataset
+# entries BEFORE any geometry JSONs exist. Disable the gate before importing
+# anything from the dataset package.
+os.environ["TIVIT_GEOMETRY_GATE_DISABLED"] = "1"
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
