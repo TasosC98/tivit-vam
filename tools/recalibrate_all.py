@@ -202,10 +202,36 @@ def main() -> None:
                             "video_path": str(entry.video_path),
                         }
                     )
+                med = result.residual_median_px
+                p95 = result.residual_p95_px
+                # Normalized residual = residual / white-key-width. <0.10 ≈ pitch
+                # snaps to the right key for note recognition; >0.20 = adjacent
+                # confusion; >0.30 = unusable.
+                ww = float(result.white_key_width_px) if result.white_key_width_px else 1.0
+                norm_med = (float(med) / ww) if (med is not None and ww > 0) else None
+                inlier_pct = (
+                    f"{int(round(100.0 * float(result.ransac_inlier_ratio)))}%"
+                    if result.ransac_inlier_ratio is not None
+                    else "n/a"
+                )
+                # Sparkline of pass/fail relative to white-key width:
+                #   .  = within  8% of key width
+                #   :  = within 17%
+                #   x  = within 33%
+                #   X  = beyond 33% (adjacent-key confusion)
+                bar = ""
+                if med is not None and ww > 0:
+                    r = float(med) / ww
+                    bar = "." if r < 0.085 else (":" if r < 0.17 else ("x" if r < 0.33 else "X"))
+                tag = {"ok": "OK   ", "accepted_loose": "LOOSE", "failed": "FAIL "}.get(status, status)
+                med_s = f"{med:5.2f}" if med is not None else "  n/a"
+                p95_s = f"{p95:5.2f}" if p95 is not None else "  n/a"
+                norm_s = f"{norm_med:.3f}" if norm_med is not None else "  n/a"
                 print(
-                    f"[calib] split={split} {idx + 1}/{limit} video={video_id} "
-                    f"status={status} median={result.residual_median_px} p95={result.residual_p95_px} "
-                    f"anchors={result.black_key_anchor_count} elapsed={time.time() - t0:.1f}s",
+                    f"[calib] {tag} {split:5s} {idx + 1:3d}/{limit:3d} {video_id:30s} "
+                    f"med={med_s} p95={p95_s} norm={norm_s} {bar} "
+                    f"anchors={result.black_key_anchor_count or 0:3d} "
+                    f"inliers={inlier_pct:>4s} {time.time() - t0:4.1f}s",
                     flush=True,
                 )
             except Exception as exc:
@@ -271,6 +297,86 @@ def main() -> None:
         f"failed={counts.get('failed', 0)} errored={counts.get('errored', 0)} "
         f"total={sum(counts.values())} elapsed={elapsed:.1f}s"
     )
+
+    # Distribution summary so we can see whether residuals improved between
+    # runs without re-running the comparator. White-key width is 1536/52 ≈
+    # 29.5 px; "norm" = median residual / white-key width.
+    def _stats(values: List[float]) -> str:
+        if not values:
+            return "n=0"
+        s = sorted(values)
+        def _q(p: float) -> float:
+            if not s:
+                return float("nan")
+            if len(s) == 1:
+                return s[0]
+            k = (len(s) - 1) * p
+            lo, hi = int(k), min(int(k) + 1, len(s) - 1)
+            return s[lo] * (hi - k) + s[hi] * (k - lo)
+        return (
+            f"n={len(s)} "
+            f"min={s[0]:5.2f} median={_q(0.5):5.2f} p90={_q(0.90):5.2f} "
+            f"p95={_q(0.95):5.2f} max={s[-1]:5.2f}"
+        )
+
+    by_split: Dict[str, List[Dict[str, Any]]] = {}
+    for row in summary_rows:
+        by_split.setdefault(str(row.get("split") or ""), []).append(row)
+
+    print()
+    print("=== Residual distribution (white-key width = 29.54 px in canonical) ===")
+    print("    Each row: status counts, median residual stats (px), normalized stats")
+    for split_name in ["train", "valid", "test"]:
+        rows = by_split.get(split_name, [])
+        if not rows:
+            continue
+        c = {"ok": 0, "accepted_loose": 0, "failed": 0, "errored": 0}
+        meds: List[float] = []
+        norms: List[float] = []
+        anchors: List[float] = []
+        adj_conf = 0  # videos with median > 0.17 of key width (adjacent-key confusion likely)
+        for r in rows:
+            st = str(r.get("calibration_status") or "")
+            c[st] = c.get(st, 0) + 1
+            m = r.get("residual_median_px")
+            if m is not None:
+                meds.append(float(m))
+                norm = float(m) / 29.5384615
+                norms.append(norm)
+                if norm > 0.17:
+                    adj_conf += 1
+            a = r.get("black_key_anchor_count")
+            if a is not None:
+                anchors.append(float(a))
+        total = len(rows)
+        usable_for_train = c.get("ok", 0) + c.get("manual_fixed", 0)
+        usable_for_eval = usable_for_train + c.get("accepted_loose", 0)
+        print(f"  [{split_name}] total={total}  "
+              f"ok={c.get('ok', 0)}  loose={c.get('accepted_loose', 0)}  "
+              f"failed={c.get('failed', 0)}  errored={c.get('errored', 0)}")
+        print(f"           train-usable={usable_for_train}/{total} ({100*usable_for_train/max(total,1):.0f}%)  "
+              f"eval-usable={usable_for_eval}/{total} ({100*usable_for_eval/max(total,1):.0f}%)")
+        print(f"           median_residual_px : {_stats(meds)}")
+        print(f"           normalized_residual: {_stats(norms)}")
+        print(f"           anchors_per_video  : {_stats(anchors)}")
+        print(f"           adjacent-confusion-risk videos (norm>0.17): {adj_conf}/{total}")
+
+    # Overall sparkline across all videos
+    all_meds = [float(r["residual_median_px"]) for r in summary_rows if r.get("residual_median_px") is not None]
+    if all_meds:
+        bins = {"<2px (excellent)": 0, "2-3px (ok)": 0, "3-5px (loose)": 0,
+                "5-8px (poor)": 0, ">=8px (broken)": 0}
+        for m in all_meds:
+            if m < 2: bins["<2px (excellent)"] += 1
+            elif m < 3: bins["2-3px (ok)"] += 1
+            elif m < 5: bins["3-5px (loose)"] += 1
+            elif m < 8: bins["5-8px (poor)"] += 1
+            else: bins[">=8px (broken)"] += 1
+        print()
+        print("=== Median-residual histogram (all splits) ===")
+        for label, n in bins.items():
+            bar = "#" * int(round(40.0 * n / max(len(all_meds), 1)))
+            print(f"  {label:22s} {n:3d} {bar}")
 
 
 if __name__ == "__main__":
