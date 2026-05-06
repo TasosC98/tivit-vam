@@ -171,6 +171,12 @@ def main() -> None:
                 json_out = write_geometry_json(result, out_root, split)
                 status = result.calibration_status
                 counts[status] = counts.get(status, 0) + 1
+                notes_for_row = str(getattr(result, "notes", "") or "")
+                row_method = (
+                    "white_edge"
+                    if "method=white_edge_correlation" in notes_for_row
+                    else ("black_key" if "method=black_key_ransac" in notes_for_row else "unknown")
+                )
                 summary_rows.append(
                     {
                         "split": split,
@@ -180,6 +186,8 @@ def main() -> None:
                         "residual_p95_px": result.residual_p95_px,
                         "ransac_inlier_ratio": result.ransac_inlier_ratio,
                         "black_key_anchor_count": result.black_key_anchor_count,
+                        "method": row_method,
+                        "notes": notes_for_row,
                         "json_path": str(json_out),
                         "video_path": str(entry.video_path),
                         "skipped_existing": False,
@@ -227,11 +235,18 @@ def main() -> None:
                 med_s = f"{med:5.2f}" if med is not None else "  n/a"
                 p95_s = f"{p95:5.2f}" if p95 is not None else "  n/a"
                 norm_s = f"{norm_med:.3f}" if norm_med is not None else "  n/a"
+                # Extract method and we_corr from notes for at-a-glance diagnosis.
+                notes = str(getattr(result, "notes", "") or "")
+                method_short = "?"
+                if "method=white_edge_correlation" in notes:
+                    method_short = "WE"
+                elif "method=black_key_ransac" in notes:
+                    method_short = "BK"
                 print(
                     f"[calib] {tag} {split:5s} {idx + 1:3d}/{limit:3d} {video_id:30s} "
                     f"med={med_s} p95={p95_s} norm={norm_s} {bar} "
                     f"anchors={result.black_key_anchor_count or 0:3d} "
-                    f"inliers={inlier_pct:>4s} {time.time() - t0:4.1f}s",
+                    f"inliers={inlier_pct:>4s} method={method_short} {time.time() - t0:4.1f}s",
                     flush=True,
                 )
             except Exception as exc:
@@ -360,6 +375,22 @@ def main() -> None:
         print(f"           normalized_residual: {_stats(norms)}")
         print(f"           anchors_per_video  : {_stats(anchors)}")
         print(f"           adjacent-confusion-risk videos (norm>0.17): {adj_conf}/{total}")
+
+    # Method × status crosstab
+    method_status: Dict[str, Dict[str, int]] = {}
+    for row in summary_rows:
+        m = str(row.get("method") or "unknown")
+        st = str(row.get("calibration_status") or "")
+        method_status.setdefault(m, {"ok": 0, "accepted_loose": 0, "failed": 0, "errored": 0})
+        method_status[m][st] = method_status[m].get(st, 0) + 1
+    print()
+    print("=== Calibration method × status ===")
+    print(f"  {'method':22s}  {'ok':>4s}  {'loose':>5s}  {'fail':>5s}  {'err':>4s}")
+    for m, c in sorted(method_status.items()):
+        print(
+            f"  {m:22s}  {c.get('ok', 0):4d}  {c.get('accepted_loose', 0):5d}  "
+            f"{c.get('failed', 0):5d}  {c.get('errored', 0):4d}"
+        )
 
     # Overall sparkline across all videos
     all_meds = [float(r["residual_median_px"]) for r in summary_rows if r.get("residual_median_px") is not None]
