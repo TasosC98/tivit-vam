@@ -79,11 +79,22 @@ def main() -> None:
     from tivit.core.config import load_experiment_config
     from tivit.data.datasets.pianovam_impl import PianoVAMDataset
     from tivit.data.roi.keyboard_calibration import (
+        CALIBRATION_VERSION,
+        CALIBRATION_FEATURES,
         CalibrationConfig,
         MedianFrameOptions,
         calibrate_video,
         write_geometry_json,
     )
+
+    # Version banner. If you are running this tool and don't see this banner,
+    # you are running an older version of the code that doesn't have it.
+    print("=" * 72)
+    print(f"TIVIT calibration {CALIBRATION_VERSION}")
+    print("Active features:")
+    for feat in CALIBRATION_FEATURES:
+        print(f"  - {feat}")
+    print("=" * 72)
 
     cfg = dict(load_experiment_config(args.config or [Path("configs/default.yaml")]))
     dataset_cfg = dict(cfg.get("dataset", {}) or {})
@@ -172,11 +183,14 @@ def main() -> None:
                 status = result.calibration_status
                 counts[status] = counts.get(status, 0) + 1
                 notes_for_row = str(getattr(result, "notes", "") or "")
-                row_method = (
-                    "white_edge"
-                    if "method=white_edge_correlation" in notes_for_row
-                    else ("black_key" if "method=black_key_ransac" in notes_for_row else "unknown")
-                )
+                if "method=white_edge_correlation" in notes_for_row:
+                    row_method = "white_edge"
+                elif "method=black_key_ransac" in notes_for_row:
+                    row_method = "black_key"
+                elif "method=nominal_crop" in notes_for_row:
+                    row_method = "nominal_crop"
+                else:
+                    row_method = "unknown"
                 summary_rows.append(
                     {
                         "split": split,
@@ -242,6 +256,8 @@ def main() -> None:
                     method_short = "WE"
                 elif "method=black_key_ransac" in notes:
                     method_short = "BK"
+                elif "method=nominal_crop" in notes:
+                    method_short = "NC"
                 print(
                     f"[calib] {tag} {split:5s} {idx + 1:3d}/{limit:3d} {video_id:30s} "
                     f"med={med_s} p95={p95_s} norm={norm_s} {bar} "
