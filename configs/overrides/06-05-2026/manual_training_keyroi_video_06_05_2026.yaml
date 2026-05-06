@@ -1,0 +1,84 @@
+# 2026-05-06 experiment overlay
+#
+# Stack on top of:
+#   - configs/default.yaml
+#   - configs/overrides/manual_training.yaml
+#   - configs/overrides/manual_training_keyroi_train.yaml
+#   - configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml  <-- THIS FILE
+#
+# Goal: lock in calibration improvements from the random-endpoint RANSAC and
+# project them into a fresh experiment folder so we can compare runs with
+# rich per-video visual diagnostics. The geometry root and log dir are
+# different from the 26-04-2026 experiment so the two runs don't overwrite.
+
+dataset:
+  preprocessed_format: null
+  hdf5_root: null
+  key_geometry_root: /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/key_geometry
+  registration:
+    enable: true
+    cache_path: reg_refined_pianovam.json
+    source: metadata
+    interp: bilinear
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/checkpoints
+  tensorboard: true
+
+# ---------------------------------------------------------------------------
+# Setup steps (run in this order, paste the per-step printouts back so we can
+# track whether the median-residual histogram improves):
+#
+# 1) Calibrate every video. Look for the histogram block at the bottom and
+#    confirm "<2px (excellent)" + "2-3px (ok)" together exceed 60 of 71.
+#
+#   PYTHONPATH=. python tools/recalibrate_all.py \
+#     --config configs/default.yaml \
+#     --config configs/overrides/manual_training.yaml \
+#     --config configs/overrides/manual_training_keyroi_train.yaml \
+#     --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#     --splits train valid test \
+#     --out-root /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/key_geometry \
+#     --max-videos 0 \
+#     --overwrite
+#
+# 2) Render visualisations: per-video PNGs sorted into status folders, with
+#    polygons overlaid on the actual median frame and a residual bar chart.
+#    Look at /visualizations/{split}/failed/*.png to SEE what's wrong.
+#
+#   PYTHONPATH=. python tools/visualize_calibration_run.py \
+#     --config configs/default.yaml \
+#     --config configs/overrides/manual_training.yaml \
+#     --config configs/overrides/manual_training_keyroi_train.yaml \
+#     --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#     --geometry-root /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/key_geometry \
+#     --out-root     /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/visualizations \
+#     --splits train valid test
+#
+# 3) Audit (uses the calibrated geometry directly):
+#
+#   PYTHONPATH=. python tools/audit_pianovam_alignment.py \
+#     --config configs/default.yaml \
+#     --config configs/overrides/manual_training.yaml \
+#     --config configs/overrides/manual_training_keyroi_train.yaml \
+#     --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#     --splits train valid test \
+#     --out-dir /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/audit \
+#     --max-videos 0
+#
+# 4) Compare the audit summary.json against the 2026-04-26 experiment:
+#
+#   PYTHONPATH=. python scripts/compare_keyroi_audits.py \
+#     --before /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_26-04-2026/audit_after_phase1/summary.json \
+#     --after  /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/audit/summary.json \
+#     --out    /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/audit_comparison.csv
+#
+# 5) Train (only if step 1's histogram shows train-usable >= 60% of train videos):
+#
+#   PYTHONPATH=. python -m tivit.pipelines.train_single \
+#     --config configs/default.yaml \
+#     --config configs/overrides/manual_training.yaml \
+#     --config configs/overrides/manual_training_keyroi_train.yaml \
+#     --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#     --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/train.log
