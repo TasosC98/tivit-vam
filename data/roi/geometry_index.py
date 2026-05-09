@@ -18,7 +18,14 @@ from typing import Any, Dict, Iterable, Mapping, Optional
 LOGGER = logging.getLogger(__name__)
 
 
-_ALLOWED_STATUSES_FOR_TRAIN = {"ok", "manual_fixed"}
+# 2026-05-08: visual inspection of overlays shows accepted_loose calibrations
+# (median < 6 px, ~20% of white-key width) are visibly correct on the
+# keyboard image — the polygons sit on the right keys. Excluding them from
+# training threw away ~40 of 71 videos for a residual difference that is
+# below the noise floor of the underlying detection. Including loose for
+# train. If F1 turns out to be poor, we'll re-tighten this threshold and
+# pivot to the manual-clicker tool, but only with that evidence in hand.
+_ALLOWED_STATUSES_FOR_TRAIN = {"ok", "manual_fixed", "accepted_loose"}
 _ALLOWED_STATUSES_FOR_EVAL = {"ok", "manual_fixed", "accepted_loose"}
 
 

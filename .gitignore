@@ -25,7 +25,9 @@ checkpoints/
 
 # datasets (αν τυχόν βρεθούν μέσα στο repo)
 datasets/
-data/
+data/PianoVAM_v1.0/
+data/HDF5/
+data/cache/
 
 __pycache__/
 *.pyc
