@@ -55,17 +55,26 @@ def main() -> int:
     print()
 
     # 2) Confirm the version string matches what we expect.
-    expected_marker = "v3.white-edge"
-    if expected_marker not in CALIBRATION_VERSION:
-        print(f"FAIL: CALIBRATION_VERSION does not contain '{expected_marker}'.")
+    # We accept any v4+ marker so future minor revisions don't break the test;
+    # bump this when a NEW pipeline change requires the test to validate it.
+    accepted_markers = ("v4.one-to-one", "v5.", "v6.")
+    if not any(m in CALIBRATION_VERSION for m in accepted_markers):
+        print(f"FAIL: CALIBRATION_VERSION does not contain any of {accepted_markers}.")
         print(f"      Found: {CALIBRATION_VERSION}")
         print(f"      You are running OLD code. Pull the repo.")
         failures += 1
     else:
-        print(f"  PASS: version contains '{expected_marker}'")
+        print(f"  PASS: version is a recognized v4+ build")
 
-    # 3) Required features must be present.
-    required = {"white_edge_correlation", "honest_residuals", "nominal_crop_fallback"}
+    # 3) Required features must be present. Names track the constants in
+    #    keyboard_calibration.py CALIBRATION_FEATURES; update when those
+    #    rename or split.
+    required = {
+        "white_edge_correlation",
+        "one_to_one_residual_assignment",
+        "nominal_crop_fallback",
+        "relaxed_acceptance_thresholds",
+    }
     missing = required - set(CALIBRATION_FEATURES)
     if missing:
         print(f"FAIL: missing required features: {missing}")

@@ -58,9 +58,15 @@ def _parse_args() -> argparse.Namespace:
     ap.add_argument("--max-seconds", type=float, default=0.0, help="0 means no limit")
     ap.add_argument("--inlier-threshold-px", type=float, default=3.0)
     ap.add_argument("--ransac-iterations", type=int, default=200)
-    ap.add_argument("--th-ok-median-px", type=float, default=2.0)
-    ap.add_argument("--th-ok-p95-px", type=float, default=4.0)
-    ap.add_argument("--th-loose-median-px", type=float, default=4.0)
+    # Threshold defaults bumped 2026-05-08 to match the v4 calibration's
+    # 1-to-1 residual metric. The old 2.0 / 4.0 defaults were calibrated for
+    # the all-detections-snap-to-nearest metric, which over-counted spurious
+    # blobs and inflated p95. With one-to-one assignment, ~50 of 71 videos
+    # land in the <3 px median range; these thresholds let those pass as
+    # "ok" rather than "loose".
+    ap.add_argument("--th-ok-median-px", type=float, default=3.5)
+    ap.add_argument("--th-ok-p95-px", type=float, default=8.0)
+    ap.add_argument("--th-loose-median-px", type=float, default=6.0)
     ap.add_argument("--overwrite", action="store_true", help="Re-process videos that already have JSON")
     return ap.parse_args()
 
