@@ -1,0 +1,123 @@
+# Phase 5 — 200-epoch training run.
+#
+# Stack on:
+#   configs/default.yaml
+#   configs/overrides/manual_training.yaml
+#   configs/overrides/manual_training_keyroi_train.yaml
+#   configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml
+#   configs/overrides/06-05-2026/phase5_train_200epochs.yaml   <-- THIS FILE
+#
+# Why a separate file from phase5_training.yaml:
+#   - Different log_dir / checkpoint_dir so the 5-epoch smoke run and the
+#     200-epoch real run don't overwrite each other's artifacts.
+#   - eval_freq=5 (the smoke ran eval every epoch which slowed it down).
+#   - save_every=10 so we keep 20 checkpoints, not 200.
+#
+# Expected wall-clock: ~17 min for the 5-epoch smoke -> ~11 hours for 200
+# epochs at the same per-epoch rate (~3.4 min/epoch). Run inside `tmux` or
+# `screen` so a dropped SSH doesn't kill it.
+
+dataset:
+  preprocessed_format: null
+  hdf5_root: null
+  key_geometry_root: /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/key_geometry
+  registration:
+    enable: true
+    cache_path: reg_refined_pianovam.json
+    source: metadata
+    interp: bilinear
+  avlag:
+    enable: true
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/phase5_train_200epochs_06_05_2026
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/phase5_train_200epochs_06_05_2026/checkpoints
+  tensorboard: true
+
+training:
+  epochs: 200
+  learning_rate: 3e-5
+  weight_decay: 0.01
+  amp: false
+  reset_head_bias: true
+  eval_freq: 5     # eval every 5 epochs (was 1 in smoke run)
+  save_every: 10   # keep 20 checkpoints
+  grad_clip: 1.0   # safety against the occasional spike
+
+  metrics:
+    eval_mode: both
+
+# ---------------------------------------------------------------------------
+# Run plan
+#
+# 0) Self-test (must pass before running anything).
+#    Confirms calibration v5 is on disk and importable.
+#
+#    PYTHONPATH=. python tools/calibration_self_test.py
+#
+# 1) Train 200 epochs in tmux (so an SSH drop doesn't kill it).
+#
+#    tmux new -s train200
+#    cd /home/achatzigiannis/tivit-vam
+#    PYTHONPATH=. python -m tivit.pipelines.train_single \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase5_train_200epochs.yaml \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase5_train_200epochs_06_05_2026/train.log
+#
+#    Detach with Ctrl-B then D. Reattach with `tmux attach -t train200`.
+#    Tail the log from another shell: `tail -f /home/.../train.log`.
+#
+# 2) Threshold calibration on the trained model (uses validation split to
+#    pick the best decoding thresholds for pitch/onset/offset).
+#
+#    PYTHONPATH=. python -m tivit.pipelines.calibrate \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase5_train_200epochs.yaml \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase5_train_200epochs_06_05_2026/calibrate.log
+#
+# 3) Full evaluation on the test split with the calibrated thresholds.
+#
+#    PYTHONPATH=. python -m tivit.pipelines.eval_single \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase5_train_200epochs.yaml \
+#      --split test \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase5_train_200epochs_06_05_2026/eval_test.log
+#
+#    Also evaluate validation for symmetry:
+#    PYTHONPATH=. python -m tivit.pipelines.eval_single \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase5_train_200epochs.yaml \
+#      --split valid \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase5_train_200epochs_06_05_2026/eval_valid.log
+#
+# ---------------------------------------------------------------------------
+# What to send back after step 1 finishes (or even at epoch 50 if you want
+# an early signal):
+#   - Final-epoch `[eval]` line from train.log
+#   - Loss table for epochs 5, 50, 100, 150, 200 (grep "[eval] epoch="
+#     train.log | tail -20)
+#
+# What to send back after step 3:
+#   - Last ~30 lines of eval_test.log (event F1, pitch metrics)
+#
+# Diagnosis playbook from the 5-epoch smoke:
+#   pitch_loss decreased 0.644 -> 0.536 in 5 epochs.   Linear extrapolation
+#     suggests pitch_loss ~0.25 at epoch 50, ~0.15 at epoch 200 (but flattens
+#     before that). Good signal.
+#   onset_loss frozen at 0.155.  Onset head didn't learn — model predicts
+#     ~0 everywhere because of class imbalance. If after 50 epochs the onset
+#     loss is STILL flat near 0.155, we need to bump pos_weight (currently
+#     adaptive_band [4, 12]) or switch to focal loss. Reply with the loss
+#     table and I'll write the fix.
