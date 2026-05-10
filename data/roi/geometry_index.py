@@ -92,6 +92,59 @@ class GeometryIndex:
         self._cache[key] = entry
         return entry
 
+    def inject_sync_into_entries(
+        self,
+        entries: Iterable[Any],
+        *,
+        split: str,
+    ) -> int:
+        """For each entry whose geometry JSON has a `sync.video_time_offset_ms`,
+        write `lag_ms` into the entry's metadata so the existing
+        `resolve_sync` flow picks it up at sample-time. Returns the number of
+        entries that received an injected lag.
+
+        This is the bridge between `tools/sync_sweep_per_video.py` (which
+        writes per-video time offsets into the geometry JSON) and the
+        dataset's per-sample sync application. If we don't inject this, the
+        dataset reads lag_ms only from metadata_v2.json (which doesn't have
+        it for PianoVAM) and silently uses 0 ms — labels stay misaligned.
+        """
+
+        if not self.is_active():
+            return 0
+        injected = 0
+        for entry in entries:
+            video_id = getattr(entry, "video_id", None)
+            if video_id is None:
+                continue
+            geom = self.get(split, str(video_id))
+            if geom is None:
+                continue
+            sync = geom.payload.get("sync") if isinstance(geom.payload, Mapping) else None
+            if not isinstance(sync, Mapping):
+                continue
+            offset_ms = sync.get("video_time_offset_ms")
+            if offset_ms is None:
+                continue
+            try:
+                offset_ms_int = int(round(float(offset_ms)))
+            except (TypeError, ValueError):
+                continue
+            md = getattr(entry, "metadata", None)
+            if isinstance(md, dict):
+                md["lag_ms"] = offset_ms_int
+                injected += 1
+            elif isinstance(md, Mapping):
+                # Replace with a mutable dict so resolve_sync can read it.
+                new_md = dict(md)
+                new_md["lag_ms"] = offset_ms_int
+                try:
+                    entry.metadata = new_md  # type: ignore[attr-defined]
+                    injected += 1
+                except Exception:
+                    pass
+        return injected
+
     def filter_entries(
         self,
         entries: Iterable[Any],

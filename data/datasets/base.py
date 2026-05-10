@@ -213,6 +213,21 @@ class BasePianoDataset(Dataset):
                 split_geom_dir,
             )
 
+        # Inject per-video sync offset (from tools/sync_sweep_per_video.py)
+        # into entry metadata so the existing resolve_sync flow picks it up.
+        # Without this, lag_ms stays 0 and labels can be 100-300 ms off from
+        # the actual visible key motion, killing onset F1 even with perfect
+        # geometry.
+        if self.geometry_index.is_active() and split_has_jsons:
+            n_inj = self.geometry_index.inject_sync_into_entries(entries, split=str(split))
+            if n_inj > 0:
+                LOGGER.info(
+                    "geometry_sync: split=%s injected lag_ms into %d/%d entries from key_geometry/<id>.json[sync]",
+                    split,
+                    n_inj,
+                    len(entries),
+                )
+
         max_clips = self.dataset_cfg.get("max_clips")
         if max_clips is not None and len(entries) > int(max_clips):
             entries = entries[: int(max_clips)]

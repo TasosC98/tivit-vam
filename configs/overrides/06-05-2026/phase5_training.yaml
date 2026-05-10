@@ -1,0 +1,90 @@
+# Phase 5 — actual training run on top of v5 calibration.
+#
+# Stack on:
+#   configs/default.yaml
+#   configs/overrides/manual_training.yaml
+#   configs/overrides/manual_training_keyroi_train.yaml
+#   configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml
+#   configs/overrides/06-05-2026/phase5_training.yaml   <- THIS FILE
+#
+# What this does:
+#  - Reuses the calibrated key_geometry produced by v5 (ok+loose accepted for train).
+#  - Reuses the per-video sync offsets injected by tools/sync_sweep_per_video.py.
+#  - Targets a SHORT training run (5 epochs) to surface real failure modes
+#    fast: bad sync, label-loss imbalance, model under-fit, etc. Once we see
+#    where the F1 wall is, we extend or fix.
+#  - Lands in a fresh log_dir so we don't clobber the calibration artifacts.
+
+dataset:
+  preprocessed_format: null
+  hdf5_root: null
+  key_geometry_root: /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/key_geometry
+  registration:
+    enable: true
+    cache_path: reg_refined_pianovam.json
+    source: metadata
+    interp: bilinear
+  # AV-sync resolution will read lag_ms from the metadata that
+  # GeometryIndex.inject_sync_into_entries writes from key_geometry/<id>.json.
+  avlag:
+    enable: true
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/phase5_training_06_05_2026
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/phase5_training_06_05_2026/checkpoints
+  tensorboard: true
+
+training:
+  # Short run to find the real bottleneck. Don't burn a long run on uncertain inputs.
+  epochs: 5
+  learning_rate: 3e-5
+  weight_decay: 0.01
+  amp: false
+  reset_head_bias: true
+
+  metrics:
+    eval_mode: both
+
+# ---------------------------------------------------------------------------
+# Run order (paste back the histograms / metrics blocks):
+#
+#   # 0) self-test (must pass and report v5)
+#   PYTHONPATH=. python tools/calibration_self_test.py
+#
+#   # 1) calibrate (already done; only re-run if you want to recompute)
+#   PYTHONPATH=. python tools/recalibrate_all.py \
+#     --config configs/default.yaml \
+#     --config configs/overrides/manual_training.yaml \
+#     --config configs/overrides/manual_training_keyroi_train.yaml \
+#     --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#     --splits train valid test \
+#     --out-root /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/key_geometry \
+#     --max-videos 0 --overwrite
+#
+#   # 2) per-video sync sweep (NEW; takes ~3-6 minutes total)
+#   #    Adds "sync" block with video_time_offset_ms to each geometry JSON.
+#   #    Look for the offset distribution at the end. If most offsets are 0..50 ms
+#   #    you have clean recordings. If many are >200 ms you'll see big
+#   #    F1 gains here vs no-sync.
+#   PYTHONPATH=. python tools/sync_sweep_per_video.py \
+#     --config configs/default.yaml \
+#     --config configs/overrides/manual_training.yaml \
+#     --config configs/overrides/manual_training_keyroi_train.yaml \
+#     --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#     --geometry-root /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/key_geometry \
+#     --splits train valid test --max-videos 0 --overwrite
+#
+#   # 3) train (5 epochs, ~1-2 hours on the GPU server)
+#   PYTHONPATH=. python -m tivit.pipelines.train_single \
+#     --config configs/default.yaml \
+#     --config configs/overrides/manual_training.yaml \
+#     --config configs/overrides/manual_training_keyroi_train.yaml \
+#     --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#     --config configs/overrides/06-05-2026/phase5_training.yaml \
+#     --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase5_training_06_05_2026/train.log
+#
+# After the training run, paste the final-epoch validation block from
+# train.log. The note-level F1 + per-color + ±1/±2 confusion lines tell us
+# whether the bottleneck is geometry, sync, or model. If F1 < 0.4 at 5
+# epochs, send the train.log and we diagnose. If F1 >= 0.5, extend epochs
+# and let it cook.
