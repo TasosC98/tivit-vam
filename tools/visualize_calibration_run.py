@@ -74,8 +74,30 @@ def _draw_status_banner(width: int, height: int, payload: Mapping[str, Any], col
     inlier_ratio = payload.get("ransac_inlier_ratio")
     norm = (float(med) / 29.5384615) if (med is not None) else None
     line1 = f"status={status}  median={med:.2f}px  p95={p95:.2f}px" if med is not None else f"status={status}"
+    # Coverage = how much of the source image is covered by canonical 0..W
+    # via the inverse homography. <1.0 means the calibrated keyboard is a
+    # sub-region of the source — visible polygons miss part of the keyboard.
+    coverage_pct = None
+    H_list = payload.get("homography")
+    target_hw = payload.get("target_hw")
+    source_hw = payload.get("source_hw")
+    if (
+        isinstance(H_list, list) and len(H_list) == 9
+        and isinstance(target_hw, list) and len(target_hw) >= 2
+        and isinstance(source_hw, list) and len(source_hw) >= 2
+    ):
+        try:
+            a = float(H_list[0]); b = float(H_list[2])
+            W_canon = float(target_hw[1]); w_src = float(source_hw[1])
+            if a > 0 and w_src > 0:
+                src_lo = max(0.0, -b / a)
+                src_hi = min(w_src, (W_canon - b) / a)
+                coverage_pct = max(0.0, (src_hi - src_lo)) / w_src * 100.0
+        except Exception:
+            coverage_pct = None
+    cov_s = f"  coverage={coverage_pct:.0f}%" if coverage_pct is not None else ""
     line2 = (
-        f"anchors={anchors}  inliers={int(round(100*float(inlier_ratio)))}%  norm={norm:.3f} (key-width)"
+        f"anchors={anchors}  inliers={int(round(100*float(inlier_ratio)))}%  norm={norm:.3f} (key-width){cov_s}"
         if (anchors is not None and inlier_ratio is not None and norm is not None)
         else ""
     )

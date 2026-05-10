@@ -43,14 +43,16 @@ LOGGER = logging.getLogger(__name__)
 # Version banner so we can verify which calibration features are active at
 # runtime. Bump this whenever the calibration pipeline changes meaningfully
 # so log analysis can correlate results with code version.
-CALIBRATION_VERSION = "2026-05-08.v4.one-to-one-assignment+relaxed-thresholds"
+CALIBRATION_VERSION = "2026-05-09.v5.coverage-gated-white-edge"
 CALIBRATION_FEATURES = [
     "white_edge_correlation",          # primary: vertical-Sobel template match
     "black_key_ransac",                # secondary: blob-based affine RANSAC
     "nominal_crop_fallback",           # tertiary: assume keyboard fills crop
-    "one_to_one_residual_assignment",  # NEW: drop spurious detections, no p95 inflation
-    "relaxed_acceptance_thresholds",   # NEW: ok<=3.5px, loose<=6.0px (was 2.5/5.0)
+    "one_to_one_residual_assignment",  # drop spurious detections, no p95 inflation
+    "relaxed_acceptance_thresholds",   # ok<=3.5px, loose<=6.0px
     "multi_method_selection",          # pick lowest honest median
+    "source_coverage_gate",            # v5 NEW: require keyboard covers >=85% of source
+    "tight_b_search_range",            # v5 NEW: b ∈ [-50,+50] not [-230,+230]
 ]
 
 _MIDI_LOW = 21
@@ -900,10 +902,17 @@ def _white_edge_score(
     template: "np.ndarray",
     *,
     canonical_width: int,
+    min_source_coverage: float = 0.85,
 ) -> float:
     """Resample source signal to canonical via x_canon = a*x_src + b, correlate with template.
 
-    Returns Pearson-like correlation; higher = better alignment.
+    Returns Pearson correlation × source-coverage penalty. Coverage is the
+    fraction of the source-image x-range that maps inside canonical [0, W).
+    Without this penalty the search can pick (a, b) where canonical 0..W maps
+    to a sub-region of the source — yielding high correlation on that sub-
+    region while leaving the rest of the keyboard unmatched. A real keyboard
+    image (after the metadata crop) should have its keyboard fill ~85-100%
+    of the source. Anything below 85% coverage is heavily down-weighted.
     """
 
     if a <= 0 or not np.isfinite(a) or not np.isfinite(b):
@@ -924,7 +933,24 @@ def _white_edge_score(
     w = warped - warped.mean()
     t = template - template.mean()
     denom = float(np.sqrt((w * w).sum() * (t * t).sum())) + 1e-9
-    return float((w * t).sum() / denom)
+    correlation = float((w * t).sum() / denom)
+
+    # Coverage penalty: source x-range that maps INTO canonical [0, W).
+    # x_src for canonical=0  -> -b/a
+    # x_src for canonical=W  -> (W - b)/a
+    src_lo = max(0.0, -float(b) / float(a))
+    src_hi = min(float(src_signal.size), (float(canonical_width) - float(b)) / float(a))
+    coverage = max(0.0, (src_hi - src_lo)) / float(max(src_signal.size, 1))
+    if coverage < min_source_coverage:
+        # Sharp penalty: drops the score below any reasonable competitor.
+        # We use a cubic taper so values right at the threshold aren't
+        # killed entirely (slight wiggle room for tight crops with a tiny
+        # gap at one edge), but values significantly below collapse fast.
+        ratio = coverage / float(min_source_coverage)
+        coverage_factor = max(0.0, ratio) ** 3
+    else:
+        coverage_factor = 1.0
+    return correlation * coverage_factor
 
 
 def calibrate_white_edge_correlation(
@@ -946,9 +972,15 @@ def calibrate_white_edge_correlation(
     template = _build_canonical_white_edge_template(int(W_canon))
 
     nominal_a = float(W_canon) / float(max(w_src, 1))
-    # Coarse grid search
-    a_grid = np.linspace(0.7 * nominal_a, 1.4 * nominal_a, 36)
-    b_grid = np.linspace(-0.15 * float(W_canon), 0.15 * float(W_canon), 31)
+    # Coarse grid search.
+    # b range is tightened (was ±0.15*W=±230 px) so the search can't pick
+    # b values that put canonical 0 way off the source image. With a near
+    # nominal_a, b ∈ [-50, +50] still allows the keyboard to start ~50 px
+    # inside or outside the source crop, which is more than sufficient for
+    # real videos. Combined with the coverage penalty in _white_edge_score
+    # this guarantees the keyboard covers ≥85% of the source.
+    a_grid = np.linspace(0.85 * nominal_a, 1.15 * nominal_a, 31)
+    b_grid = np.linspace(-50.0, 50.0, 31)
 
     best_score = -1e9
     best_a, best_b = nominal_a, 0.0

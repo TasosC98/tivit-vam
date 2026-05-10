@@ -57,7 +57,7 @@ def main() -> int:
     # 2) Confirm the version string matches what we expect.
     # We accept any v4+ marker so future minor revisions don't break the test;
     # bump this when a NEW pipeline change requires the test to validate it.
-    accepted_markers = ("v4.one-to-one", "v5.", "v6.")
+    accepted_markers = ("v5.coverage", "v6.", "v7.")
     if not any(m in CALIBRATION_VERSION for m in accepted_markers):
         print(f"FAIL: CALIBRATION_VERSION does not contain any of {accepted_markers}.")
         print(f"      Found: {CALIBRATION_VERSION}")
@@ -74,6 +74,7 @@ def main() -> int:
         "one_to_one_residual_assignment",
         "nominal_crop_fallback",
         "relaxed_acceptance_thresholds",
+        "source_coverage_gate",
     }
     missing = required - set(CALIBRATION_FEATURES)
     if missing:
