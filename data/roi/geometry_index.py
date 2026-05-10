@@ -97,22 +97,26 @@ class GeometryIndex:
         entries: Iterable[Any],
         *,
         split: str,
-    ) -> int:
-        """For each entry whose geometry JSON has a `sync.video_time_offset_ms`,
-        write `lag_ms` into the entry's metadata so the existing
-        `resolve_sync` flow picks it up at sample-time. Returns the number of
-        entries that received an injected lag.
+        min_correlation: float = 0.25,
+    ) -> "tuple[int, int]":
+        """For each entry whose geometry JSON has a HIGH-QUALITY
+        `sync.video_time_offset_ms`, write `lag_ms` into the entry's metadata
+        so the existing `resolve_sync` flow picks it up at sample-time.
 
-        This is the bridge between `tools/sync_sweep_per_video.py` (which
-        writes per-video time offsets into the geometry JSON) and the
-        dataset's per-sample sync application. If we don't inject this, the
-        dataset reads lag_ms only from metadata_v2.json (which doesn't have
-        it for PianoVAM) and silently uses 0 ms — labels stay misaligned.
+        Only injects when `sync.peak_correlation >= min_correlation`. The
+        2026-05-10 sync sweep produced peak correlations of 0.02-0.19 across
+        all 71 videos because the motion-energy signal inside whole-key
+        polygons is dominated by hand crossing, not key motion. Those bad
+        offsets MUST NOT be used for training labels — they would shift onsets
+        by hundreds of milliseconds in random directions.
+
+        Returns: (n_injected, n_rejected_low_corr)
         """
 
         if not self.is_active():
-            return 0
+            return (0, 0)
         injected = 0
+        rejected = 0
         for entry in entries:
             video_id = getattr(entry, "video_id", None)
             if video_id is None:
@@ -125,6 +129,15 @@ class GeometryIndex:
                 continue
             offset_ms = sync.get("video_time_offset_ms")
             if offset_ms is None:
+                continue
+            peak_corr = sync.get("peak_correlation")
+            try:
+                peak_corr_f = float(peak_corr) if peak_corr is not None else 0.0
+            except (TypeError, ValueError):
+                peak_corr_f = 0.0
+            if peak_corr_f < float(min_correlation):
+                # Reject: trust lag_ms = 0 over a noisy measurement.
+                rejected += 1
                 continue
             try:
                 offset_ms_int = int(round(float(offset_ms)))
@@ -143,7 +156,7 @@ class GeometryIndex:
                     injected += 1
                 except Exception:
                     pass
-        return injected
+        return (injected, rejected)
 
     def filter_entries(
         self,

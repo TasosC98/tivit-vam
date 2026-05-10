@@ -215,16 +215,18 @@ class BasePianoDataset(Dataset):
 
         # Inject per-video sync offset (from tools/sync_sweep_per_video.py)
         # into entry metadata so the existing resolve_sync flow picks it up.
-        # Without this, lag_ms stays 0 and labels can be 100-300 ms off from
-        # the actual visible key motion, killing onset F1 even with perfect
-        # geometry.
+        # Quality-gated: low-correlation measurements are REJECTED and lag_ms
+        # stays at the default (0). Better to leave labels at zero offset than
+        # shift them by a noisy-measurement of 200+ ms in a random direction.
         if self.geometry_index.is_active() and split_has_jsons:
-            n_inj = self.geometry_index.inject_sync_into_entries(entries, split=str(split))
-            if n_inj > 0:
+            n_inj, n_rej = self.geometry_index.inject_sync_into_entries(entries, split=str(split))
+            if n_inj > 0 or n_rej > 0:
                 LOGGER.info(
-                    "geometry_sync: split=%s injected lag_ms into %d/%d entries from key_geometry/<id>.json[sync]",
+                    "geometry_sync: split=%s injected=%d rejected_low_corr=%d / %d entries "
+                    "(lag_ms=0 used where rejected)",
                     split,
                     n_inj,
+                    n_rej,
                     len(entries),
                 )
 
