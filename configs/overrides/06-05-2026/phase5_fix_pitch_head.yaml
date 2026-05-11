@@ -1,0 +1,151 @@
+# Phase 5 fix — pitch head was silent in the 200-epoch run.
+#
+# Diagnosis from eval_test.log of phase5_train_200epochs_06_05_2026:
+#   onset_pred_events_per_clip   = 2771    (gt = 15  -> 180x over-prediction)
+#   pitch_pred_active_per_frame  = 0.032   (gt = 1.495  -> 50x under-prediction)
+#   onset_event_f1_anypitch      = 0.328   (timing OK)
+#   onset_event_f1               = 0.011   (pitch wrong)
+#   pitch_active_f1              = 0
+#
+# Root cause: the original manual_training_keyroi_train.yaml gives pos_weight
+# [4, 12] to onset and offset heads, but DOES NOT give pos_weight to pitch.
+# Pitch frames are 1.7% positive, so default pos_weight=1 lets the trivial
+# "predict zero" win. The onset head fires everywhere (over-weighted), the
+# pitch head whispers "no key" (under-weighted), and the decoder produces
+# 2771 events at the wrong pitches. F1 collapses.
+#
+# Fix:
+#   1. Add adaptive_band pos_weight to the pitch head. Use [2.0, 4.0] —
+#      lighter than onset/offset because pitch positive density (1.7% per
+#      frame-key cell) is higher than onset density (0.7%), so we don't need
+#      as aggressive re-weighting.
+#   2. Lower pitch_probe threshold from 0.5 to 0.02 to match the model's
+#      typical pitch logit distribution after training. The threshold sweep
+#      already found 0.02-0.07 to be the right zone for onset/offset; pitch
+#      is in the same range when properly trained with pos_weight.
+#   3. Use a longer save_every and fewer eval cycles so we get to convergence
+#      faster.
+#
+# Stack on:
+#   configs/default.yaml
+#   configs/overrides/manual_training.yaml
+#   configs/overrides/manual_training_keyroi_train.yaml
+#   configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml
+#   configs/overrides/06-05-2026/phase5_fix_pitch_head.yaml    <-- THIS FILE
+
+dataset:
+  preprocessed_format: null
+  hdf5_root: null
+  key_geometry_root: /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/key_geometry
+  registration:
+    enable: true
+    cache_path: reg_refined_pianovam.json
+    source: metadata
+    interp: bilinear
+  avlag:
+    enable: true
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/phase5_pitch_fix_06_05_2026
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/phase5_pitch_fix_06_05_2026/checkpoints
+  tensorboard: true
+
+training:
+  epochs: 200
+  learning_rate: 3e-5
+  weight_decay: 0.01
+  amp: false
+  reset_head_bias: true
+  eval_freq: 10        # eval every 10 epochs — convergence happened by ~75, no need for dense eval
+  save_every: 25       # keep 8 checkpoints
+  grad_clip: 1.0
+
+  # Override the metrics threshold for pitch so the decoder can actually see
+  # the pitch head's outputs. The trained model's pitch logits live in the
+  # 0.01-0.20 range; 0.5 is far above that distribution and reads as "all
+  # zeros".
+  metrics:
+    eval_mode: both
+    key_probe:
+      threshold: 0.02     # was 0.5 — that's why pitch_active_f1 was 0
+      top_k: 8
+    patk:
+      threshold: 0.02     # match
+
+  # ---- The critical fix: pitch head pos_weight ----
+  loss:
+    head_weights:
+      pitch: 1.0
+      onset: 1.5
+      offset: 1.5
+      hand: 0.0
+      clef: 0.0
+    per_tile:
+      enabled: true
+      heads: [pitch, onset, offset]
+    heads:
+      # NEW: pitch head was missing from this list, defaulting to pos_weight=1
+      pitch:
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [2.0, 4.0]   # lighter than onset/offset because density is higher
+        prior_weight: 0.0
+      onset:
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [4.0, 12.0]
+        prior_weight: 0.0
+      offset:
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [4.0, 12.0]
+        prior_weight: 0.0
+
+# ---------------------------------------------------------------------------
+# Run plan
+#
+# 0) Self-test (should still print v5)
+#    PYTHONPATH=. python tools/calibration_self_test.py
+#
+# 1) Train 200 epochs in tmux. Watch for:
+#    - pitch loss should drop similarly to before (0.54 -> ~0.16) BUT now
+#      the pitch logits should be skewed higher because of pos_weight.
+#    - onset/offset losses similar to before.
+#
+#    tmux new -s pitchfix
+#    PYTHONPATH=. python -m tivit.pipelines.train_single \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase5_fix_pitch_head.yaml \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase5_pitch_fix_06_05_2026/train.log
+#
+# 2) Threshold calibration:
+#    PYTHONPATH=. python -m tivit.pipelines.calibrate \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase5_fix_pitch_head.yaml \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase5_pitch_fix_06_05_2026/calibrate.log
+#
+# 3) Eval test:
+#    PYTHONPATH=. python -m tivit.pipelines.eval_single \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase5_fix_pitch_head.yaml \
+#      --split test \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase5_pitch_fix_06_05_2026/eval_test.log
+#
+# Expected outcome after fix:
+#   pitch_pred_active_per_frame   ~0.5-2.0   (was 0.032)
+#   pitch_active_f1               > 0.10     (was 0)
+#   onset_event_f1                > 0.05     (was 0.011)
+#   onset_event_f1_anypitch       > 0.35     (was 0.328)
+#
+# If pitch_active_f1 is still <0.05 after this fix, the next move is
+# Phase 4 (manual calibration) for the most-impactful videos — that's
+# the geometry noise floor talking.
