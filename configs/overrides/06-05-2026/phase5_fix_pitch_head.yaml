@@ -84,12 +84,15 @@ training:
       enabled: true
       heads: [pitch, onset, offset]
     heads:
-      # NEW: pitch head was missing from this list, defaulting to pos_weight=1
+      # NEW: pitch head was missing from this list, defaulting to pos_weight=1.
+      # The pitch head schema requires exactly {loss, pos_weight_mode,
+      # pos_weight, pos_weight_band} — does NOT accept prior_weight (unlike
+      # onset/offset). See losses/multitask_loss.py:357-378.
       pitch:
+        loss: bce_with_logits
         pos_weight_mode: adaptive_band
         pos_weight: null
         pos_weight_band: [2.0, 4.0]   # lighter than onset/offset because density is higher
-        prior_weight: 0.0
       onset:
         pos_weight_mode: adaptive_band
         pos_weight: null
