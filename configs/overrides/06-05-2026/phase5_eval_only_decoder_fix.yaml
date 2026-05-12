@@ -1,0 +1,99 @@
+# Eval-only decoder fix — no retraining.
+#
+# Reuses the checkpoint from phase5_pitch_fix_06_05_2026/ but with corrected
+# decoder thresholds and top_k. The model is fine; the decoder was burying it.
+#
+# Diagnosis from phase5_pitch_fix_06_05_2026/eval_test.log:
+#   pitch_pred_active_per_frame = 8.000  (gt = 1.495)  <- top_k=8 over-predicts 5x
+#   pitch_active_precision      = 0.042                 <- too many false positives
+#   pitch_active_recall         = 0.226                 <- recall is fine
+#   onset_event_f1              = 0.011                 <- threshold/decoder limit
+#   onset_pred_events_per_clip  = 2776  (gt = 15)       <- onset head over-fires
+#
+# From the calibration sweep at phase5_pitch_fix_06_05_2026/calibration.json:
+#   onset @ thr=0.07: tp=128 fp=7206 fn=59 (precision=0.018, recall=0.685)
+# Model RECALLS 68% of onsets — they're there, just buried under FPs.
+#
+# Stack on:
+#   configs/default.yaml
+#   configs/overrides/manual_training.yaml
+#   configs/overrides/manual_training_keyroi_train.yaml
+#   configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml
+#   configs/overrides/06-05-2026/phase5_fix_pitch_head.yaml      <- pitch pos_weight (must keep, same checkpoint shape)
+#   configs/overrides/06-05-2026/phase5_eval_only_decoder_fix.yaml  <- THIS FILE
+
+logging:
+  # Read the SAME checkpoint that phase5_fix_pitch_head trained.
+  log_dir: /home/achatzigiannis/tivit-logs/phase5_pitch_fix_06_05_2026
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/phase5_pitch_fix_06_05_2026/checkpoints
+
+training:
+  metrics:
+    eval_mode: both
+    key_probe:
+      threshold: 0.10   # was 0.02 — filter low-confidence pitch predictions
+      top_k: 2          # was 8 — match GT density (avg 1.5 keys active/frame)
+    patk:
+      threshold: 0.10
+      top_k: 2
+
+decoder:
+  global_fusion:
+    enabled: true
+    mode: masked_mean
+    cushion_keys: 2
+    apply_to: [pitch, onset, offset]
+  # Use the calibrated onset/offset thresholds from the existing calibration.json.
+  onset:
+    open: 0.07
+    low_ratio: 0.60
+    min_on: 1
+    min_off: 1
+    merge_gap: 0
+    median: 1
+  offset:
+    open: 0.07
+    low_ratio: 0.60
+    min_on: 1
+    min_off: 1
+    merge_gap: 0
+    median: 1
+
+# ---------------------------------------------------------------------------
+# Run plan (eval only — no training):
+#
+# 1) Re-evaluate on test using the existing checkpoint with new decoder cfg
+#    (single command, takes ~2 minutes):
+#
+#    PYTHONPATH=. python -m tivit.pipelines.eval_single \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase5_fix_pitch_head.yaml \
+#      --config configs/overrides/06-05-2026/phase5_eval_only_decoder_fix.yaml \
+#      --split test \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase5_pitch_fix_06_05_2026/eval_test_decoder_fix.log
+#
+# 2) Same on valid for symmetry:
+#
+#    PYTHONPATH=. python -m tivit.pipelines.eval_single \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase5_fix_pitch_head.yaml \
+#      --config configs/overrides/06-05-2026/phase5_eval_only_decoder_fix.yaml \
+#      --split valid \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase5_pitch_fix_06_05_2026/eval_valid_decoder_fix.log
+#
+# Expected outcome:
+#   pitch_pred_active_per_frame   -> ~1.5-2.5  (was 8.0)
+#   pitch_active_precision        -> > 0.15    (was 0.042)
+#   pitch_active_recall           -> ~0.20     (was 0.226 — small drop OK)
+#   pitch_active_f1               -> > 0.15    (was 0.071)
+#   onset_event_f1                -> > 0.04    (was 0.011)
+#   onset_pred_events_per_clip    -> < 1500    (was 2776)
+#
+# If pitch_active_f1 < 0.10 after this, retraining with rebalanced loss
+# (phase5_rebalanced_loss.yaml — Path B) is the next step.

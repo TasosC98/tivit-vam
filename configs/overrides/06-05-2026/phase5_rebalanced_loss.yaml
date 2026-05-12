@@ -1,0 +1,100 @@
+# Phase 5 retrain — rebalance head losses so onset/offset don't over-fire.
+#
+# Only run this if phase5_eval_only_decoder_fix.yaml's eval shows F1 < 0.10.
+# This rewrites the loss config and requires a fresh 200-epoch training run.
+#
+# Diagnosis: with pos_weight=[4,12] on onset/offset, the model is heavily
+# pushed to predict positives, producing ~7000 false positives per clip.
+# Lowering pos_weight from [4,12] to [2,5] should reduce over-firing while
+# keeping enough push to learn sparse onsets. We also tighten pitch
+# pos_weight from [2,4] to [1.5,3] for the same reason.
+#
+# Stack on:
+#   configs/default.yaml
+#   configs/overrides/manual_training.yaml
+#   configs/overrides/manual_training_keyroi_train.yaml
+#   configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml
+#   configs/overrides/06-05-2026/phase5_rebalanced_loss.yaml      <- THIS FILE
+
+dataset:
+  preprocessed_format: null
+  hdf5_root: null
+  key_geometry_root: /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/key_geometry
+  registration:
+    enable: true
+    cache_path: reg_refined_pianovam.json
+    source: metadata
+    interp: bilinear
+  avlag:
+    enable: true
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/phase5_rebalanced_06_05_2026
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/phase5_rebalanced_06_05_2026/checkpoints
+  tensorboard: true
+
+training:
+  epochs: 200
+  learning_rate: 3e-5
+  weight_decay: 0.01
+  amp: false
+  reset_head_bias: true
+  eval_freq: 10
+  save_every: 25
+  grad_clip: 1.0
+
+  metrics:
+    eval_mode: both
+    key_probe:
+      threshold: 0.10
+      top_k: 2
+    patk:
+      threshold: 0.10
+      top_k: 2
+
+  loss:
+    head_weights:
+      pitch: 1.0
+      onset: 1.5
+      offset: 1.5
+      hand: 0.0
+      clef: 0.0
+    per_tile:
+      enabled: true
+      heads: [pitch, onset, offset]
+    heads:
+      pitch:
+        loss: bce_with_logits
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [1.5, 3.0]     # was [2.0, 4.0]
+      onset:
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [2.0, 5.0]     # was [4.0, 12.0]
+        prior_weight: 0.0
+      offset:
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [2.0, 5.0]     # was [4.0, 12.0]
+        prior_weight: 0.0
+
+# ---------------------------------------------------------------------------
+# Run plan (only if Path A's eval F1 < 0.10):
+#
+# 1) Self-test
+#    PYTHONPATH=. python tools/calibration_self_test.py
+#
+# 2) Train in tmux (~11h)
+#    tmux new -s rebalanced
+#    PYTHONPATH=. python -m tivit.pipelines.train_single \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase5_rebalanced_loss.yaml \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase5_rebalanced_06_05_2026/train.log
+#
+# 3) Calibrate + eval test (same pattern as before)
+#    PYTHONPATH=. python -m tivit.pipelines.calibrate ... --config phase5_rebalanced_loss.yaml ...
+#    PYTHONPATH=. python -m tivit.pipelines.eval_single ... --config phase5_rebalanced_loss.yaml ... --split test
