@@ -1,0 +1,198 @@
+# Phase 6 — combined fix: rebalanced loss + sync correction + tuned decoder.
+#
+# Stacks all the fixes that Path A revealed are needed:
+#   1. Lighter onset/offset pos_weight   [4,12] -> [2,5]
+#   2. Lighter pitch pos_weight          [2,4]  -> [1.5,3]
+#   3. Decoder thresholds                top_k=2, threshold=0.10
+#   4. Onset/offset decoder open=0.07    (calibrated from previous run)
+#   5. Reset head bias (re-seeded for new pos_weight)
+#
+# IMPORTANT: This run REQUIRES the sync sweep v2 to have been run first.
+# Without sync correction, label-vs-frame alignment errors hurt pitch
+# discrimination by ~50ms (1-2 frames at 30fps), and the pitch head can't
+# tell which key was actually pressed when the label says frame T but the
+# motion is at frame T+2.
+#
+# Run order:
+#   0)  Self-test (banner = v5)
+#   1)  Sync sweep v2 (~30 min — uses bottom-region key motion vs median frame)
+#   2)  Self-check sync quality. If most videos still report status=low_correlation,
+#       lag_ms stays 0 and we proceed anyway. If many succeed, training labels
+#       are correctly time-shifted.
+#   3)  Train 200 epochs (~11h, in tmux)
+#   4)  Calibrate decoder thresholds on valid
+#   5)  Eval on valid + test
+#
+# Stack on:
+#   configs/default.yaml
+#   configs/overrides/manual_training.yaml
+#   configs/overrides/manual_training_keyroi_train.yaml
+#   configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml
+#   configs/overrides/06-05-2026/phase6_combined.yaml      <- THIS FILE
+
+dataset:
+  preprocessed_format: null
+  hdf5_root: null
+  key_geometry_root: /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/key_geometry
+  registration:
+    enable: true
+    cache_path: reg_refined_pianovam.json
+    source: metadata
+    interp: bilinear
+  avlag:
+    enable: true   # reads lag_ms injected from key_geometry/<id>.json[sync] if peak_corr >= 0.25
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/phase6_combined_06_05_2026
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/phase6_combined_06_05_2026/checkpoints
+  tensorboard: true
+
+training:
+  epochs: 200
+  learning_rate: 3e-5
+  weight_decay: 0.01
+  amp: false
+  reset_head_bias: true
+  eval_freq: 10
+  save_every: 25
+  grad_clip: 1.0
+
+  metrics:
+    eval_mode: both
+    key_probe:
+      threshold: 0.10
+      top_k: 2
+    patk:
+      threshold: 0.10
+      top_k: 2
+
+  loss:
+    head_weights:
+      pitch: 1.0
+      onset: 1.5
+      offset: 1.5
+      hand: 0.0
+      clef: 0.0
+    per_tile:
+      enabled: true
+      heads: [pitch, onset, offset]
+    heads:
+      pitch:
+        loss: bce_with_logits
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [1.5, 3.0]     # tightened from [2.0, 4.0]
+      onset:
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [2.0, 5.0]     # cut hard from [4.0, 12.0]
+        prior_weight: 0.0
+      offset:
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [2.0, 5.0]
+        prior_weight: 0.0
+
+decoder:
+  global_fusion:
+    enabled: true
+    mode: masked_mean
+    cushion_keys: 2
+    apply_to: [pitch, onset, offset]
+  onset:
+    open: 0.07          # calibrated threshold from previous sweep
+    low_ratio: 0.60
+    min_on: 1
+    min_off: 1
+    merge_gap: 0
+    median: 1
+  offset:
+    open: 0.07
+    low_ratio: 0.60
+    min_on: 1
+    min_off: 1
+    merge_gap: 0
+    median: 1
+
+# ---------------------------------------------------------------------------
+# Run plan (sequence matters):
+#
+# 0) Sanity:
+#    PYTHONPATH=. python tools/calibration_self_test.py
+#
+# 1) Sync sweep v2 (improved signal — bottom-region motion vs median frame).
+#    Takes ~30 min total instead of 5 hours like v1.
+#
+#    PYTHONPATH=. python tools/sync_sweep_per_video.py \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --geometry-root /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/key_geometry \
+#      --splits train valid test --max-videos 0 --overwrite
+#
+#    EXPECTATION: with bottom-25% region + median-frame baseline + aggregate
+#    signal, we should see peak correlations rise above 0.25 for at least
+#    some videos. Those get lag_ms injected; the rest stay at 0.
+#
+# 2) Train 200 epochs in tmux (~11h):
+#
+#    tmux new -s phase6
+#    PYTHONPATH=. python -m tivit.pipelines.train_single \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase6_combined.yaml \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase6_combined_06_05_2026/train.log
+#
+# 3) Calibrate decoder thresholds on valid:
+#    PYTHONPATH=. python -m tivit.pipelines.calibrate \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase6_combined.yaml \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase6_combined_06_05_2026/calibrate.log
+#
+# 4) Eval test:
+#    PYTHONPATH=. python -m tivit.pipelines.eval_single \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase6_combined.yaml \
+#      --split test \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase6_combined_06_05_2026/eval_test.log
+#
+#    Same on valid:
+#    PYTHONPATH=. python -m tivit.pipelines.eval_single \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase6_combined.yaml \
+#      --split valid \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase6_combined_06_05_2026/eval_valid.log
+#
+# ---------------------------------------------------------------------------
+# Expected outcomes (REALISTIC):
+#
+#   With sync v2 finding non-zero peak_corr on some videos:
+#     pitch_active_f1            : 0.15 - 0.25  (from 0.075)
+#     patk_note_f1               : 0.10 - 0.20  (from 0.044)
+#     onset_event_f1             : 0.04 - 0.10  (from 0.015)
+#     pitch_balanced_accuracy    : 0.60 - 0.70  (from 0.53)
+#
+#   If sync v2 still produces low_correlation everywhere:
+#     pitch_active_f1            : 0.12 - 0.18
+#     patk_note_f1               : 0.08 - 0.15
+#
+# F1 > 0.4 is NOT realistic from this single-experiment Phase 6. To reach 0.4+:
+#   - Need more training data (only 50 train videos currently — try data
+#     augmentation or sourcing additional PianoVAM-like recordings)
+#   - Need manual calibration (Phase 4 with the clicker tool) for all
+#     borderline videos
+#   - Need architectural changes (per-key streams, audio teacher distillation)
+#
+# These are research-level changes, not configuration changes.
