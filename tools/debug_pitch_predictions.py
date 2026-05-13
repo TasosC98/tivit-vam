@@ -145,14 +145,16 @@ def main() -> None:
         out = model(video_in)
         # Output is typically a dict of head -> logits. Find pitch and onset.
         if isinstance(out, Mapping):
-            pitch_logits = out.get("pitch")
-            onset_logits = out.get("onset")
-            offset_logits = out.get("offset")
+            # Real key names in this codebase are *_logits, not just the head name.
+            pitch_logits = out.get("pitch_logits", out.get("pitch"))
+            onset_logits = out.get("onset_logits", out.get("onset"))
+            offset_logits = out.get("offset_logits", out.get("offset"))
         else:
             raise SystemExit(f"model output is not a mapping (got {type(out)}); cannot extract heads")
 
     if pitch_logits is None:
-        raise SystemExit("model output has no 'pitch' head")
+        keys_str = ", ".join(sorted(out.keys()) if isinstance(out, Mapping) else [])
+        raise SystemExit(f"model output has no 'pitch_logits' head. Available keys: [{keys_str}]")
 
     # Squeeze batch
     pitch_logits = pitch_logits.squeeze(0).detach().cpu().numpy()  # (T, K) or (T, tiles, K)

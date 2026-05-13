@@ -1,0 +1,185 @@
+# Phase 8 — Focal loss for onset/offset.
+#
+# Evidence from phase7 per-epoch sweep:
+#   - onset loss is FLAT across all 200 epochs (0.137 - 0.137). The onset
+#     head learned nothing beyond the initial bias.
+#   - Model fires ~2800 onset predictions per clip vs 21 GT. The
+#     `pos_weight=[4,12]` pushed the model to predict positives blindly;
+#     it can maximize recall by firing everywhere.
+#   - "anypitch" F1 stayed constant 0.376 across all epochs — it's a metric
+#     artifact, not real detection skill.
+#
+# Why focal loss helps:
+#   Focal loss = -alpha * (1-p)^gamma * log(p). For sparse positives, the
+#   `(1-p)^gamma` term DOWN-WEIGHTS easy negatives (where p is small) and
+#   FORCES the model to focus on hard examples — the actual onsets it's
+#   currently missing or the false positives it's currently spraying.
+#   With pos_weight, the model can cheat by firing everywhere. With focal,
+#   it cannot — firing everywhere creates massive easy-positive loss that
+#   dominates the focal term.
+#
+# Config requirements (from losses/multitask_loss.py:405-406):
+#   focal loss requires pos_weight_mode = "off" (no pos_weight scaling).
+#   Required fields: focal_gamma, focal_alpha, prior_mean, prior_weight.
+#
+# Stack on:
+#   configs/default.yaml
+#   configs/overrides/manual_training.yaml
+#   configs/overrides/manual_training_keyroi_train.yaml
+#   configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml
+#   configs/overrides/13-05-2026/phase8_focal_loss.yaml      <- THIS FILE
+
+dataset:
+  preprocessed_format: null
+  hdf5_root: null
+  key_geometry_root: /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/key_geometry
+  registration:
+    enable: true
+    cache_path: reg_refined_pianovam.json
+    source: metadata
+    interp: bilinear
+  avlag:
+    enable: true
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/phase8_focal_loss_13_05_2026
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/phase8_focal_loss_13_05_2026/checkpoints
+  tensorboard: true
+
+training:
+  # Phase7 showed best metric at epoch 75-100. No point training to 200.
+  epochs: 120
+  learning_rate: 3e-5
+  weight_decay: 0.01
+  amp: false
+  reset_head_bias: true
+  eval_freq: 10
+  save_every: 10   # checkpoint every 10 = 12 checkpoints (plenty)
+  grad_clip: 1.0
+
+  metrics:
+    eval_mode: both
+    key_probe:
+      threshold: 0.10
+      top_k: 2
+    patk:
+      threshold: 0.10
+      top_k: 2
+
+  loss:
+    head_weights:
+      pitch: 1.0
+      onset: 1.5
+      offset: 1.5
+      hand: 0.0
+      clef: 0.0
+    per_tile:
+      enabled: true
+      heads: [pitch, onset, offset]
+    heads:
+      # Pitch head: keep BCE with light pos_weight (pitch is the only head
+      # currently learning anything; don't break what's working).
+      pitch:
+        loss: bce_with_logits
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [1.5, 3.0]
+      # Onset head: focal loss. pos_weight MUST be off when using focal.
+      onset:
+        loss: focal
+        pos_weight_mode: "off"
+        pos_weight: null
+        pos_weight_band: null
+        focal_gamma: 2.0      # standard focal value; emphasises hard examples
+        focal_alpha: 0.25     # standard value for sparse positives
+        prior_mean: 0.0066    # observed onset positive rate
+        prior_weight: 0.0
+      # Offset head: same.
+      offset:
+        loss: focal
+        pos_weight_mode: "off"
+        pos_weight: null
+        pos_weight_band: null
+        focal_gamma: 2.0
+        focal_alpha: 0.25
+        prior_mean: 0.0061
+        prior_weight: 0.0
+
+decoder:
+  global_fusion:
+    enabled: true
+    mode: masked_mean
+    cushion_keys: 2
+    apply_to: [pitch, onset, offset]
+  onset:
+    open: 0.07
+    low_ratio: 0.60
+    min_on: 1
+    min_off: 1
+    merge_gap: 0
+    median: 1
+  offset:
+    open: 0.07
+    low_ratio: 0.60
+    min_on: 1
+    min_off: 1
+    merge_gap: 0
+    median: 1
+
+# ---------------------------------------------------------------------------
+# Run plan
+#
+# 0) Self-test
+#    PYTHONPATH=. python tools/calibration_self_test.py
+#
+# 1) Train 120 epochs in tmux (~7h)
+#    tmux new -s phase8
+#    PYTHONPATH=. python -m tivit.pipelines.train_single \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/13-05-2026/phase8_focal_loss.yaml \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase8_focal_loss_13_05_2026/train.log
+#
+# 2) Per-epoch eval sweep (which epoch is best?):
+#    PYTHONPATH=. python tools/eval_all_checkpoints.py \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/13-05-2026/phase8_focal_loss.yaml \
+#      --checkpoint-dir /home/achatzigiannis/tivit-logs/phase8_focal_loss_13_05_2026/checkpoints \
+#      --split valid \
+#      --out-dir /home/achatzigiannis/tivit-logs/phase8_focal_loss_13_05_2026/per_epoch_eval
+#
+# 3) Debug pitch predictions on best checkpoint (the debug tool is now fixed
+#    so it reads pitch_logits correctly):
+#    PYTHONPATH=. python tools/debug_pitch_predictions.py \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/13-05-2026/phase8_focal_loss.yaml \
+#      --video-id 2024-02-15_20-07-54 \
+#      --split valid \
+#      --out-dir /home/achatzigiannis/tivit-logs/phase8_focal_loss_13_05_2026/pitch_debug
+#
+# Expected outcomes:
+#   With focal loss properly applied, the onset prediction COUNT should drop
+#   dramatically:
+#     onset_pred_events_per_clip   2800 -> < 100 (target: 20-50)
+#     onset_event_f1               0.015 -> 0.05-0.15
+#     patk_onset_f1                0.10  -> 0.15-0.30
+#   Pitch_active_f1 should also improve because the decoder isn't being
+#   flooded with garbage onsets anymore:
+#     pitch_active_f1              0.08  -> 0.12-0.20
+#     patk_note_f1                 0.07  -> 0.12-0.20
+#
+# If F1 still doesn't move past ~0.10 after focal loss, we've reached the
+# ceiling of what THIS architecture can do with THIS data. The next move
+# would be:
+#   A) per-key streams (architectural change, requires model rewrite)
+#   B) audio-teacher distillation (extra signal from MIDI)
+#   C) substantially more training data
+# All are PhD-thesis-level changes.
