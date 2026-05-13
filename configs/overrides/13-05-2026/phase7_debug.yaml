@@ -1,0 +1,123 @@
+# Phase 7 — systematic debug of pitch discrimination.
+#
+# Why we're here:
+#   - Path A eval revealed pitch_balanced_accuracy = 0.524 (~chance)
+#   - onset_event_f1_anypitch = 0.40 (timing works)
+#   - pitch_active_f1        = 0.07 (which-key fails)
+#   The model detects ~40% of onsets at correct times but assigns them to
+#   wrong pitches. F1 won't move further without finding WHY pitch fails.
+#
+# What this phase does:
+#   1. Per-checkpoint sweep: evaluates every epoch_*.pt to find best epoch.
+#      Maybe epoch 100 is much better than 200 (over-fitting?). The CSV
+#      will tell us.
+#   2. Per-video debug dump: for 3 representative videos, runs the trained
+#      model and saves:
+#        - pitch_offset_histogram (argmax_pred - true_pitch)
+#        - logit_heatmap (88 keys x T frames with GT marked)
+#        - per_frame_predictions.csv
+#        - first_10_onsets.txt
+#      These directly answer "is the model systematically off, random, or
+#      learning correctly".
+#
+# Stack on:
+#   configs/default.yaml
+#   configs/overrides/manual_training.yaml
+#   configs/overrides/manual_training_keyroi_train.yaml
+#   configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml
+#   configs/overrides/06-05-2026/phase5_fix_pitch_head.yaml
+#   configs/overrides/06-05-2026/phase5_eval_only_decoder_fix.yaml
+#   configs/overrides/13-05-2026/phase7_debug.yaml      <- THIS FILE
+#
+# This config does NOT retrain — it only reads the existing checkpoints
+# under phase5_pitch_fix_06_05_2026/checkpoints. So all outputs land in a
+# fresh debug folder.
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/phase7_debug_13_05_2026
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/phase5_pitch_fix_06_05_2026/checkpoints
+  tensorboard: false
+
+# ---------------------------------------------------------------------------
+# Run plan (no training, ~30 minutes total)
+#
+# 0) Self-test
+#    PYTHONPATH=. python tools/calibration_self_test.py
+#
+# 1) Per-epoch eval sweep (~20 min for 8 checkpoints on valid)
+#    PYTHONPATH=. python tools/eval_all_checkpoints.py \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase5_fix_pitch_head.yaml \
+#      --config configs/overrides/06-05-2026/phase5_eval_only_decoder_fix.yaml \
+#      --config configs/overrides/13-05-2026/phase7_debug.yaml \
+#      --checkpoint-dir /home/achatzigiannis/tivit-logs/phase5_pitch_fix_06_05_2026/checkpoints \
+#      --split valid \
+#      --out-dir /home/achatzigiannis/tivit-logs/phase7_debug_13_05_2026/per_epoch_eval
+#
+# 2) Per-video pitch debug — pick 3 representative videos. Run for each:
+#
+#    # video A: a "loose" video that calibrated well (canon test)
+#    PYTHONPATH=. python tools/debug_pitch_predictions.py \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/06-05-2026/phase5_fix_pitch_head.yaml \
+#      --config configs/overrides/06-05-2026/phase5_eval_only_decoder_fix.yaml \
+#      --config configs/overrides/13-05-2026/phase7_debug.yaml \
+#      --video-id 2024-02-15_20-07-54 \
+#      --split valid \
+#      --out-dir /home/achatzigiannis/tivit-logs/phase7_debug_13_05_2026/pitch_debug
+#
+#    # video B: a different camera setup
+#    PYTHONPATH=. python tools/debug_pitch_predictions.py \
+#      ... --video-id 2024-09-02_12-45-12 --split valid ...
+#
+#    # video C: a test-split video
+#    PYTHONPATH=. python tools/debug_pitch_predictions.py \
+#      ... --video-id 2024-09-03_00-44-45 --split test ...
+#
+# ---------------------------------------------------------------------------
+# Files to send back so I can diagnose:
+#
+# A) From step 1 (per-epoch eval):
+#    - per_epoch_eval/per_epoch_f1.csv
+#    - per_epoch_eval/per_epoch_summary.txt
+#    Tells us: which epoch is the best checkpoint, and whether F1 plateaued
+#    early or kept rising.
+#
+# B) From step 2 (per-video debug), for EACH of the 3 videos:
+#    - pitch_debug/<video_id>/clip_info.json    <- has the "diagnosis" field
+#    - pitch_debug/<video_id>/pitch_offset_histogram.png  <- KEY DIAGNOSTIC
+#    - pitch_debug/<video_id>/logit_heatmap.png           <- visual inspection
+#    - pitch_debug/<video_id>/first_10_onsets.txt
+#
+# The pitch_offset_histogram is the most important file. Three patterns:
+#
+#   Pattern 1 — Centered at 0, narrow spread:
+#       The model IS predicting the correct pitches; decoder thresholds
+#       just need tuning. Quick fix.
+#
+#   Pattern 2 — Centered at k ≠ 0 (consistent shift):
+#       CALIBRATION OFFSET BUG. The model is predicting key N when GT is
+#       key N+k. Means the dataset's pitch-to-key index is off by k, OR
+#       the key polygons cover the wrong canonical keys. We can fix by
+#       offsetting in the data loader.
+#
+#   Pattern 3 — Flat / random:
+#       The model never learned pitch discrimination. The polygons either
+#       don't contain enough per-key signal (insufficient resolution) OR
+#       the loss/optimizer didn't push the head. Next move depends on
+#       which.
+#
+# C) Bonus (if you have time): the TSV file for the same video so I can
+#    sanity-check the labels match what's visible.
+#    Just send the first 50 lines of:
+#      /raid_storage/data_achatzigiannis/PianoVAM_v1.0/TSV/2024-02-15_20-07-54.tsv
+#
+# ---------------------------------------------------------------------------
+# Expected outcome: NO IMPROVEMENT in F1 from this phase — it's diagnostic.
+# Phase 8 (the actual fix) depends on which pattern the histogram shows.
