@@ -300,6 +300,36 @@ def main() -> None:
             fh.write(f"  Sigmoid at GT keys : {[float(pitch_probs[t, k]) for k in gt_keys]}\n")
             fh.write("\n")
 
+    # Marginal-collapse diagnostic.
+    # If the model's pitch logits are nearly CONSTANT across frames, it has
+    # collapsed to predicting the marginal pitch distribution regardless of
+    # input — i.e. the model isn't really using the video. We measure this by:
+    #   1. per-key temporal std (across T frames) — how much each key's logit
+    #      varies over time. Low values = constant prediction.
+    #   2. per-frame argmax — does the model's argmax PITCH vary frame to
+    #      frame, or does it always pick the same key?
+    per_key_temporal_std = pitch_logits.std(axis=0)  # shape (K,)
+    argmax_per_frame = pitch_logits.argmax(axis=1)   # (T,)
+    n_unique_argmax = int(np.unique(argmax_per_frame).size)
+    most_common_argmax = int(np.bincount(argmax_per_frame).argmax())
+    most_common_argmax_pct = float((argmax_per_frame == most_common_argmax).mean() * 100.0)
+    clip_info["per_key_temporal_std_median"] = float(np.median(per_key_temporal_std))
+    clip_info["per_key_temporal_std_max"] = float(per_key_temporal_std.max())
+    clip_info["n_unique_argmax_keys_over_time"] = n_unique_argmax
+    clip_info["most_common_argmax_key"] = most_common_argmax
+    clip_info["most_common_argmax_key_pct"] = most_common_argmax_pct
+    # Marginal-collapse flag: if 80%+ of frames predict the same argmax key
+    # AND temporal std is tiny, the model has collapsed to constant output.
+    if most_common_argmax_pct > 80.0 and clip_info["per_key_temporal_std_median"] < 0.05:
+        clip_info["marginal_collapse"] = True
+        clip_info["collapse_severity"] = "SEVERE"
+    elif most_common_argmax_pct > 60.0 and clip_info["per_key_temporal_std_median"] < 0.10:
+        clip_info["marginal_collapse"] = True
+        clip_info["collapse_severity"] = "PARTIAL"
+    else:
+        clip_info["marginal_collapse"] = False
+        clip_info["collapse_severity"] = "NONE"
+
     # Histogram summary in clip_info
     if offsets:
         offsets_arr = np.asarray(offsets)

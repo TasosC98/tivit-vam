@@ -1,0 +1,170 @@
+# Phase 9 — LAST attempt to break marginal-prediction collapse.
+#
+# Evidence from phase7 debug tool (logit heatmaps):
+#   The model's pitch logits are NEARLY CONSTANT across all 48 frames in
+#   every video tested. Bright rows in the heatmap are HORIZONTAL — the
+#   model outputs ~the same prediction every frame regardless of input.
+#   This means the model has collapsed to predicting the marginal pitch
+#   distribution and stopped using the video information for pitch.
+#
+# Why this happens with current architecture + data + loss:
+#   1. The pitch head's pos_weight=[1.5, 3.0] makes the trivial "predict
+#      marginal" solution near-optimal: BCE = 0.16 with no learning vs
+#      0.10-0.15 with full learning.
+#   2. Tile-fusion attention is too coarse (3 tiles for 88 keys) — the
+#      visual features feeding the pitch head may not encode per-key info.
+#   3. Only ~50 train videos. The gradient signal for per-frame pitch
+#      discrimination is weak.
+#
+# What this Phase 9 tries (ALL config-level — no model rewrite):
+#   1. HIGHER learning rate (3e-5 -> 1e-4) for the first 50 epochs to push
+#      the model out of the trivial-prediction basin.
+#   2. Per-tile DISABLED (currently the per-tile multiply forces structured
+#      predictions). Without it, the pitch head must learn from raw features.
+#   3. Stronger pitch pos_weight band [3.0, 6.0] — risk: more false
+#      positives, but might break the "predict zero" attractor.
+#   4. Track training-time temporal variance: the trainer doesn't directly
+#      report it but we can read the per-epoch debug from the eval logs.
+#
+# REALISTIC EXPECTATION: This may or may not help. If pitch_balanced_acc
+# stays at 0.53, the model architecture is the bottleneck and config
+# changes cannot fix it. Time to either:
+#   A) Rewrite the model with per-key attention/streams
+#   B) Add audio-teacher distillation (use MIDI as a teacher signal)
+#   C) Substantially more training data
+#
+# Stack on:
+#   configs/default.yaml
+#   configs/overrides/manual_training.yaml
+#   configs/overrides/manual_training_keyroi_train.yaml
+#   configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml
+#   configs/overrides/13-05-2026/phase9_break_marginal_collapse.yaml  <- THIS FILE
+
+dataset:
+  preprocessed_format: null
+  hdf5_root: null
+  key_geometry_root: /home/achatzigiannis/tivit-logs/manual_training_keyroi_video_06_05_2026/key_geometry
+  registration:
+    enable: true
+    cache_path: reg_refined_pianovam.json
+    source: metadata
+    interp: bilinear
+  avlag:
+    enable: true
+
+logging:
+  log_dir: /home/achatzigiannis/tivit-logs/phase9_break_collapse_13_05_2026
+  checkpoint_dir: /home/achatzigiannis/tivit-logs/phase9_break_collapse_13_05_2026/checkpoints
+  tensorboard: true
+
+training:
+  epochs: 100
+  learning_rate: 1e-4         # was 3e-5; higher to escape trivial minimum
+  weight_decay: 0.01
+  amp: false
+  reset_head_bias: true
+  eval_freq: 10
+  save_every: 10
+  grad_clip: 1.0
+
+  metrics:
+    eval_mode: both
+    key_probe:
+      threshold: 0.10
+      top_k: 2
+    patk:
+      threshold: 0.10
+      top_k: 2
+
+  loss:
+    head_weights:
+      pitch: 1.5            # bumped: focus more on pitch
+      onset: 1.5
+      offset: 1.5
+      hand: 0.0
+      clef: 0.0
+    per_tile:
+      enabled: false        # DISABLED — let the pitch head learn from raw features
+      heads: [pitch, onset, offset]
+    heads:
+      pitch:
+        loss: bce_with_logits
+        pos_weight_mode: adaptive_band
+        pos_weight: null
+        pos_weight_band: [3.0, 6.0]    # stronger push — risk FPs but break collapse
+      onset:
+        loss: focal
+        pos_weight_mode: "off"
+        pos_weight: null
+        pos_weight_band: null
+        focal_gamma: 2.0
+        focal_alpha: 0.25
+        prior_mean: 0.0066
+        prior_weight: 0.0
+      offset:
+        loss: focal
+        pos_weight_mode: "off"
+        pos_weight: null
+        pos_weight_band: null
+        focal_gamma: 2.0
+        focal_alpha: 0.25
+        prior_mean: 0.0061
+        prior_weight: 0.0
+
+decoder:
+  global_fusion:
+    enabled: true
+    mode: masked_mean
+    cushion_keys: 2
+    apply_to: [pitch, onset, offset]
+  onset:
+    open: 0.07
+    low_ratio: 0.60
+    min_on: 1
+    min_off: 1
+    merge_gap: 0
+    median: 1
+  offset:
+    open: 0.07
+    low_ratio: 0.60
+    min_on: 1
+    min_off: 1
+    merge_gap: 0
+    median: 1
+
+# ---------------------------------------------------------------------------
+# Run plan
+#
+# 1) Train 100 epochs (~6h) in tmux:
+#    tmux new -s phase9
+#    PYTHONPATH=. python -m tivit.pipelines.train_single \
+#      --config configs/default.yaml \
+#      --config configs/overrides/manual_training.yaml \
+#      --config configs/overrides/manual_training_keyroi_train.yaml \
+#      --config configs/overrides/06-05-2026/manual_training_keyroi_video_06_05_2026.yaml \
+#      --config configs/overrides/13-05-2026/phase9_break_marginal_collapse.yaml \
+#      --verbose info 2>&1 | tee /home/achatzigiannis/tivit-logs/phase9_break_collapse_13_05_2026/train.log
+#
+# 2) Per-epoch eval sweep:
+#    PYTHONPATH=. python tools/eval_all_checkpoints.py \
+#      ... --config phase9_break_marginal_collapse.yaml ...
+#      --checkpoint-dir /home/achatzigiannis/tivit-logs/phase9_break_collapse_13_05_2026/checkpoints
+#      --split valid \
+#      --out-dir /home/achatzigiannis/tivit-logs/phase9_break_collapse_13_05_2026/per_epoch_eval
+#
+# 3) Per-video pitch debug (will now report marginal_collapse field):
+#    PYTHONPATH=. python tools/debug_pitch_predictions.py \
+#      ... --config phase9_break_marginal_collapse.yaml ...
+#      --checkpoint <best epoch from step 2> \
+#      --video-id 2024-02-15_20-07-54 --split valid \
+#      --out-dir /home/achatzigiannis/tivit-logs/phase9_break_collapse_13_05_2026/pitch_debug
+#
+# WHAT TO LOOK FOR:
+#   - clip_info.json -> marginal_collapse: false  AND collapse_severity: "NONE"
+#     means we broke out of collapse. F1 should rise.
+#   - If collapse_severity stays "SEVERE" -> ARCHITECTURE IS THE BOTTLENECK.
+#     No more config changes will help.
+#
+# REALISTIC F1 TARGETS:
+#   - If we break collapse:  pitch_active_f1 0.15-0.25
+#   - If collapse persists:   pitch_active_f1 stays 0.07-0.08 forever
