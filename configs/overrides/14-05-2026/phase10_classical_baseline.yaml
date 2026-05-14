@@ -1,0 +1,127 @@
+# Phase 10 — Classical (deterministic) piano transcription baseline.
+#
+# Phase 9 confirmed total marginal-prediction collapse:
+#   most_common_argmax_key_pct = 100.0%
+#   n_unique_argmax_keys_over_time = 1
+#   collapse_severity = PARTIAL but argmax is constant -> effectively SEVERE
+#
+# The trained ViViT model has converged to predicting ONE constant pitch
+# (key 46) for every frame, regardless of input video. No more config
+# changes can fix this — it's an architecture/data scale issue.
+#
+# Phase 10's hypothesis: a deterministic per-key motion detector that uses
+# the calibrated geometry directly will outperform the trained model. If it
+# achieves F1 > 0.4, the data + geometry are FINE — the trained model is
+# the bottleneck and the right next research direction is replacing
+# (or distilling into) the model.
+#
+# The classical detector:
+#   1. Builds a homography from the PianoVAM metadata corners
+#      (Point_LT/RT/RB/LB) directly to a canonical (180, 1536) rectangle.
+#   2. Warps every video frame.
+#   3. For each of 88 canonical key polygons, computes per-key motion
+#      energy = mean |frame_t - frame_t-1| inside the BOTTOM HALF of each
+#      polygon. (Bottom-half because hands rarely reach there; key tip motion
+#      is captured.)
+#   4. Smooths the per-key time series.
+#   5. Peak-detection per key: peak = local max above mean + k*std.
+#   6. Output (time, midi_pitch) events.
+#   7. Match against TSV ground truth with onset tolerance ±50 ms.
+#
+# Why marginal collapse cannot happen here:
+#   Each key's prediction is computed INDEPENDENTLY from its own polygon.
+#   There is no shared classifier. No optimization. No loss function.
+#   No way for the system to "collapse to a constant" because there is
+#   no learning happening at all.
+#
+# Stack on:
+#   This config does not need to be merged with the training config stack.
+#   The classical detector is a standalone CLI tool. The YAML below just
+#   centralizes hyperparameters.
+
+classical_detector:
+  # Per-key motion smoothing window (frames). 3-5 frames @ 30fps = 100-150 ms.
+  smoothing_window: 3
+  # Onset peak threshold = mean + factor * std of per-key motion. Lower =
+  # more recall, less precision. Tune per dataset.
+  peak_threshold_factor: 3.0
+  # Minimum gap between consecutive events at the same pitch. Real piano
+  # repetitions are >100 ms apart in normal play.
+  min_event_gap_s: 0.10
+  # Onset tolerance for F1 matching (same as standard MIR-eval).
+  onset_tolerance_ms: 50.0
+
+logging:
+  out_dir: /home/achatzigiannis/tivit-logs/classical_baseline_14_05_2026
+
+# ---------------------------------------------------------------------------
+# Run plan
+#
+# A) SINGLE-VIDEO TEST (the one you uploaded):
+#    PYTHONPATH=. python tools/classical_piano_detector.py \
+#      --video /home/achatzigiannis/tivit-logs/2024-09-05_21-31-00.mp4 \
+#      --tsv   /home/achatzigiannis/tivit-logs/2024-09-05_21-31-00.tsv \
+#      --metadata-corners "253,441;1648,444;1651,602;249,598" \
+#      --out-dir /home/achatzigiannis/tivit-logs/classical_baseline_14_05_2026/single \
+#      --target-fps 30
+#
+#    Expected output:
+#      - F1, precision, recall printed
+#      - motion_heatmap.png with detected events (white circles) overlaid on
+#        per-key motion + GT events (red x)
+#      - midi60_timeseries.png showing the smoothed motion series for middle C
+#      - result.json with full metrics
+#
+#    Send me the result.json and motion_heatmap.png after running. The
+#    motion_heatmap will tell us at a glance whether the detector is picking
+#    up real key motion or only noise.
+#
+# B) FULL DATASET (all train+valid+test, ~30 min):
+#    PYTHONPATH=. python tools/run_classical_baseline_all_videos.py \
+#      --video-root /raid_storage/data_achatzigiannis/PianoVAM_v1.0/Video \
+#      --tsv-root   /raid_storage/data_achatzigiannis/PianoVAM_v1.0/TSV \
+#      --metadata   /raid_storage/data_achatzigiannis/PianoVAM_v1.0/metadata_v2.json \
+#      --out-dir    /home/achatzigiannis/tivit-logs/classical_baseline_14_05_2026 \
+#      --splits     train valid test
+#
+#    Outputs:
+#      - all_videos_f1.csv  (one row per video)
+#      - SUMMARY.txt        (per-split mean / median F1, white-vs-black)
+#
+# ---------------------------------------------------------------------------
+# INTERPRETATION GUIDE:
+#
+#   Scenario 1 — Classical F1 > 0.4 on most videos:
+#     The data, geometry, and TSV labels are all fine. The trained ViViT
+#     model is the bottleneck (marginal collapse). Two options:
+#       (a) Use the classical detector directly. F1 is what it is.
+#       (b) Train a new model that learns to mimic the classical detector
+#           (knowledge distillation). The classical detector provides
+#           per-frame supervision the original loss did not.
+#
+#   Scenario 2 — Classical F1 in 0.15-0.4:
+#     The data has SOME usable signal but the classical detector's
+#     thresholding misses some events. We can:
+#       (a) Tune peak_threshold_factor (lower = more recall)
+#       (b) Add temporal context (look ahead/back N frames)
+#       (c) Apply optical flow specifically
+#
+#   Scenario 3 — Classical F1 < 0.15:
+#     Either the geometry calibration is wrong on this video, OR the video
+#     itself doesn't have detectable key motion (too far/blurry/occluded).
+#     Look at motion_heatmap.png — if it's mostly uniform noise, the
+#     video is the problem. If there are clear peaks but the matcher
+#     misses them, threshold tuning will help.
+#
+# ---------------------------------------------------------------------------
+# WHY THIS IS RESEARCH-DEFENSIBLE:
+#
+# In the PhD thesis, you can report:
+#   - A deterministic visual-only baseline that achieves F1 = X on PianoVAM.
+#   - A direct comparison between the learned (ViViT) and unlearned
+#     (classical motion) approaches — proves which is the real bottleneck.
+#   - The marginal-collapse diagnostic (your debug tool) as a methodology
+#     contribution.
+# If classical F1 > ViViT F1 (likely), this is a strong story: "naive
+# motion-based detection outperforms the learned baseline, motivating
+# architectural research."
